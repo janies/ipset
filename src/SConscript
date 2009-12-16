@@ -1,0 +1,16 @@
+Import('root_env')
+
+env = root_env.Clone()
+
+env.Prepend(CPPPATH = ["#/include"])
+
+libipset_files = \
+    [
+     "ipset.c",
+    ]
+
+libipset = env.SharedLibrary("ipset", libipset_files)
+env.Alias("install", env.Install(env["LIBDIR"], libipset))
+Default(libipset)
+
+Export('libipset')
