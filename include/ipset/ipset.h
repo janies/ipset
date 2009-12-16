@@ -48,7 +48,7 @@ int ipset_init();
  */
 
 void
-ipset_init_ipv4_set(ipv4_set_t *set);
+ipset_ipv4_init(ipv4_set_t *set);
 
 /**
  * Finalize an IPv4 set, freeing any space used to represent the set
@@ -57,7 +57,7 @@ ipset_init_ipv4_set(ipv4_set_t *set);
  */
 
 void
-ipset_done_ipv4_set(ipv4_set_t *set);
+ipset_ipv4_done(ipv4_set_t *set);
 
 /**
  * Creates a new empty IPv4 set on the heap.  Returns NULL if we can't
@@ -65,7 +65,7 @@ ipset_done_ipv4_set(ipv4_set_t *set);
  */
 
 ipv4_set_t *
-ipset_new_ipv4_set();
+ipset_ipv4_new();
 
 /**
  * Finalize and free a heap-allocated IPv4 set, freeing any space used
@@ -73,7 +73,7 @@ ipset_new_ipv4_set();
  */
 
 void
-ipset_free_ipv4_set(ipv4_set_t *set);
+ipset_ipv4_free(ipv4_set_t *set);
 
 
 /*---------------------------------------------------------------------
@@ -86,7 +86,7 @@ ipset_free_ipv4_set(ipv4_set_t *set);
  */
 
 void
-ipset_init_ipv6_set(ipv6_set_t *set);
+ipset_ipv6_init(ipv6_set_t *set);
 
 /**
  * Finalize an IPv6 set, freeing any space used to represent the set
@@ -95,7 +95,7 @@ ipset_init_ipv6_set(ipv6_set_t *set);
  */
 
 void
-ipset_done_ipv6_set(ipv6_set_t *set);
+ipset_ipv6_done(ipv6_set_t *set);
 
 /**
  * Creates a new empty IPv6 set on the heap.  Returns NULL if we can't
@@ -103,7 +103,7 @@ ipset_done_ipv6_set(ipv6_set_t *set);
  */
 
 ipv6_set_t *
-ipset_new_ipv6_set();
+ipset_ipv6_new();
 
 /**
  * Finalize and free a heap-allocated IPv6 set, freeing any space used
@@ -111,7 +111,7 @@ ipset_new_ipv6_set();
  */
 
 void
-ipset_free_ipv6_set(ipv6_set_t *set);
+ipset_ipv6_free(ipv6_set_t *set);
 
 
 #endif  /* IPSET_IPSET_H */

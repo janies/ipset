@@ -8,56 +8,32 @@
  * ----------------------------------------------------------------------
  */
 
-#include <stdlib.h>
 
-#include <bdd.h>
-#include <ipset/ipset.h>
-
-
-void
-ipset_init_ipv6_set(ipv6_set_t *set)
-{
-    /*
-     * The set starts empty, so every value assignment should yield
-     * false.
-     */
-
-    set->set_bdd = bdd_addref(bddfalse);
-}
+/*
+ * The IPv4 and IPv6 set types are basically identical, except for the
+ * names of the functions, and the size of the values that are being
+ * stored.  Rather than having two mostly duplicate definitions of
+ * each function, we define “template functions” where anything that
+ * depends on the size of the IP address is defined using the
+ * following macros.
+ */
 
 
-ipv6_set_t *
-ipset_new_ipv6_set()
-{
-    ipv6_set_t  *result = NULL;
+/**
+ * The name of the ipvX_set_t type.
+ */
 
-    /*
-     * Try to allocate a new set.
-     */
+#define IP_SET_T ipv6_set_t
 
-    result = (ipv6_set_t *) malloc(sizeof(ipv6_set_t));
-    if (result == NULL)
-        return NULL;
+/**
+ * Creates a function name of the form “ipset_ipv6_<basename>”.
+ */
 
-    /*
-     * If that worked, initialize and return the set.
-     */
-
-    ipset_init_ipv6_set(result);
-    return result;
-}
+#define IPSET_FUNC(basename) ipset_ipv6_##basename
 
 
-void
-ipset_done_ipv6_set(ipv6_set_t *set)
-{
-    bdd_delref(set->set_bdd);
-}
+/*
+ * Now include all of the templates.
+ */
 
-
-void
-ipset_free_ipv6_set(ipv6_set_t *set)
-{
-    ipset_done_ipv6_set(set);
-    free(set);
-}
+#include "allocation-template.c"
