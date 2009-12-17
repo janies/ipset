@@ -1,0 +1,26 @@
+Import('root_env')
+
+env = root_env.Clone()
+
+env.Prepend(CPPPATH=["#/include", "$check_CPPPATH"],
+            LIBPATH=["#/src", "$check_LIBPATH"])
+
+test_ipset_files = \
+    [
+     "test-ipset.c",
+    ]
+
+test_ipset = env.Program("test-ipset",
+                         ["test-ipset.c"],
+                         LIBS=['ipset', "$check_LIB"])
+
+env.Alias("build-tests", test_ipset)
+test = env.Alias("test", [test_ipset],
+                 ["@echo Running tests...",
+                  "@%s" % test_ipset[0].abspath])
+env.AlwaysBuild(test)
+
+# Don't build the tests by default; but clean them by default.
+
+if GetOption('clean'):
+    env.Default("build-tests")

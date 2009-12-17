@@ -29,6 +29,7 @@ root_env.Clean("clean-scons",
                 ".sconf_temp",
                 ".scons.vars",
                 ".scons.vars.buddy",
+                ".scons.vars.check",
                 "config.log",
                ])
 
@@ -53,6 +54,15 @@ if not GetOption('clean') and not GetOption('help'):
         print "!! Cannot find the buddy library."
         Exit(0)
 
+
+    if not conf.CheckLibInPath("check",
+                               library="check",
+                               call="",
+                               header="#include <check.h>"):
+        print "!! Cannot find the check library."
+        Exit(0)
+
+
     root_env = conf.Finish()
 
 # Include the subdirectory SConscripts
@@ -61,4 +71,5 @@ Export('root_env')
 SConscript([
             'include/SConscript',
             'src/SConscript',
+            'tests/SConscript',
            ])
