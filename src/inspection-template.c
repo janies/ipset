@@ -22,3 +22,25 @@ IPSET_FUNC(is_empty)(IP_SET_T *set)
 
     return (set->set_bdd == bddfalse);
 }
+
+bool
+IPSET_FUNC(is_equal)(IP_SET_T *set1, IP_SET_T *set2)
+{
+    /*
+     * Since BDDs are unique, sets can only be equal if their BDDs are
+     * equal.
+     */
+
+    return (set1->set_bdd == set2->set_bdd);
+}
+
+bool
+IPSET_FUNC(is_not_equal)(IP_SET_T *set1, IP_SET_T *set2)
+{
+    /*
+     * Since BDDs are unique, sets can only be equal if their BDDs are
+     * equal.
+     */
+
+    return (set1->set_bdd != set2->set_bdd);
+}

@@ -84,6 +84,20 @@ ipset_ipv4_free(ipv4_set_t *set);
 bool
 ipset_ipv4_is_empty(ipv4_set_t *set);
 
+/**
+ * Returns whether two IPv4 sets are equal.
+ */
+
+bool
+ipset_ipv4_is_equal(ipv4_set_t *set1, ipv4_set_t *set2);
+
+/**
+ * Returns whether two IPv4 sets are not equal.
+ */
+
+bool
+ipset_ipv4_is_not_equal(ipv4_set_t *set1, ipv4_set_t *set2);
+
 
 /*---------------------------------------------------------------------
  * IPv6 functions
@@ -128,6 +142,20 @@ ipset_ipv6_free(ipv6_set_t *set);
 
 bool
 ipset_ipv6_is_empty(ipv6_set_t *set);
+
+/**
+ * Returns whether two IPv6 sets are equal.
+ */
+
+bool
+ipset_ipv6_is_equal(ipv6_set_t *set1, ipv6_set_t *set2);
+
+/**
+ * Returns whether two IPv6 sets are not equal.
+ */
+
+bool
+ipset_ipv6_is_not_equal(ipv6_set_t *set1, ipv6_set_t *set2);
 
 
 #endif  /* IPSET_IPSET_H */
