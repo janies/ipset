@@ -27,6 +27,8 @@ root_env.Clean("clean-scons",
                [
                 ".sconsign.dblite",
                 ".sconf_temp",
+                ".scons.vars",
+                ".scons.vars.buddy",
                 "config.log",
                ])
 
@@ -45,7 +47,7 @@ if not GetOption('clean') and not GetOption('help'):
 
 
     if not conf.CheckLibInPath("buddy",
-                               library="libbdd",
+                               library="bdd",
                                call="bdd_init(1000, 1000)",
                                header="#include <bdd.h>"):
         print "!! Cannot find the buddy library."

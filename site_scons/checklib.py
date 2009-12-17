@@ -37,9 +37,12 @@ def CheckLibInPath(context, libname, library, call, header=""):
     except KeyError:
         lastCPPPATH = []
 
-    context.env.Append(LIBS=library,
-                       LIBPATH="${with_%s}/lib" % libname,
-                       CPPPATH="${with_%s}/include" % libname)
+    libpath = "${with_%s}/lib" % libname
+    cpppath = "${with_%s}/include" % libname
+
+    context.env.Append(LIBS=[library],
+                       LIBPATH=[libpath],
+                       CPPPATH=[cpppath])
 
     ret = context.TryLink("""
 %s
@@ -51,10 +54,14 @@ main(int argc, char **argv) {
 }
 """ % (header, call), ".c")
 
-    if not ret:
-        context.env.Replace(LIBS=lastLIBS,
-                            LIBPATH=lastLIBPATH,
-                            CPPPATH=lastCPPPATH)
+    context.env.Replace(LIBS=lastLIBS,
+                        LIBPATH=lastLIBPATH,
+                        CPPPATH=lastCPPPATH)
+
+    if ret:
+        context.env['%s_LIB' % libname] = library
+        context.env['%s_LIBPATH' % libname] = libpath
+        context.env['%s_CPPPATH' % libname] = cpppath
 
     context.Result(ret)
     return ret
