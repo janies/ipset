@@ -1,4 +1,4 @@
-Import('root_env')
+Import('root_env', 'libipset')
 
 env = root_env.Clone()
 
@@ -12,7 +12,7 @@ test_ipset_files = \
 
 test_ipset = env.Program("test-ipset",
                          ["test-ipset.c"],
-                         LIBS=['ipset', "$check_LIB"])
+                         LIBS=[libipset, "$check_LIB"])
 
 env.Alias("build-tests", test_ipset)
 test = env.Alias("test", [test_ipset],
