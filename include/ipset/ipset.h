@@ -98,6 +98,17 @@ ipset_ipv4_is_equal(ipv4_set_t *set1, ipv4_set_t *set2);
 bool
 ipset_ipv4_is_not_equal(ipv4_set_t *set1, ipv4_set_t *set2);
 
+/**
+ * Adds a single IPv4 address to an IPv4 set.  We don't care what
+ * specific type is used to represent address; elem should be a
+ * pointer to an address stored as a 32-bit big-endian integer.
+ *
+ * Returns whether the value was already in the set or not.
+ */
+
+bool
+ipset_ipv4_add(ipv4_set_t *set, void *elem);
+
 
 /*---------------------------------------------------------------------
  * IPv6 functions
@@ -156,6 +167,17 @@ ipset_ipv6_is_equal(ipv6_set_t *set1, ipv6_set_t *set2);
 
 bool
 ipset_ipv6_is_not_equal(ipv6_set_t *set1, ipv6_set_t *set2);
+
+/**
+ * Adds a single IPv6 address to an IPv6 set.  We don't care what
+ * specific type is used to represent address; elem should be a
+ * pointer to an address stored as a 128-bit big-endian integer.
+ *
+ * Returns whether the value was already in the set or not.
+ */
+
+bool
+ipset_ipv6_add(ipv6_set_t *set, void *elem);
 
 
 #endif  /* IPSET_IPSET_H */

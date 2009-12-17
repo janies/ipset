@@ -14,7 +14,7 @@
 #include <ipset/ipset.h>
 
 bool
-IPSET_FUNC(is_empty)(IP_SET_T *set)
+IPSET_NAME(is_empty)(IP_SET_T *set)
 {
     /*
      * Since BDDs are unique, the only empty set is the “false” BDD.
@@ -24,7 +24,7 @@ IPSET_FUNC(is_empty)(IP_SET_T *set)
 }
 
 bool
-IPSET_FUNC(is_equal)(IP_SET_T *set1, IP_SET_T *set2)
+IPSET_NAME(is_equal)(IP_SET_T *set1, IP_SET_T *set2)
 {
     /*
      * Since BDDs are unique, sets can only be equal if their BDDs are
@@ -35,7 +35,7 @@ IPSET_FUNC(is_equal)(IP_SET_T *set1, IP_SET_T *set2)
 }
 
 bool
-IPSET_FUNC(is_not_equal)(IP_SET_T *set1, IP_SET_T *set2)
+IPSET_NAME(is_not_equal)(IP_SET_T *set1, IP_SET_T *set2)
 {
     /*
      * Since BDDs are unique, sets can only be equal if their BDDs are

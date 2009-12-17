@@ -26,10 +26,16 @@
 #define IP_SET_T ipv4_set_t
 
 /**
- * Creates a function name of the form “ipset_ipv4_<basename>”.
+ * The number of bits in an IPvX address.
  */
 
-#define IPSET_FUNC(basename) ipset_ipv4_##basename
+#define IP_BIT_SIZE  IPV4_BIT_SIZE
+
+/**
+ * Creates a identifier of the form “ipset_ipv4_<basename>”.
+ */
+
+#define IPSET_NAME(basename) ipset_ipv4_##basename
 
 
 /*
@@ -38,3 +44,5 @@
 
 #include "allocation-template.c"
 #include "inspection-template.c"
+#include "internal-template.c"
+#include "modify-template.c"

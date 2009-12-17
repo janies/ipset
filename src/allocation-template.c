@@ -15,7 +15,7 @@
 
 
 void
-IPSET_FUNC(init)(IP_SET_T *set)
+IPSET_NAME(init)(IP_SET_T *set)
 {
     /*
      * The set starts empty, so every value assignment should yield
@@ -27,7 +27,7 @@ IPSET_FUNC(init)(IP_SET_T *set)
 
 
 IP_SET_T *
-IPSET_FUNC(new)()
+IPSET_NAME(new)()
 {
     IP_SET_T  *result = NULL;
 
@@ -43,21 +43,21 @@ IPSET_FUNC(new)()
      * If that worked, initialize and return the set.
      */
 
-    IPSET_FUNC(init)(result);
+    IPSET_NAME(init)(result);
     return result;
 }
 
 
 void
-IPSET_FUNC(done)(IP_SET_T *set)
+IPSET_NAME(done)(IP_SET_T *set)
 {
     bdd_delref(set->set_bdd);
 }
 
 
 void
-IPSET_FUNC(free)(IP_SET_T *set)
+IPSET_NAME(free)(IP_SET_T *set)
 {
-    IPSET_FUNC(done)(set);
+    IPSET_NAME(done)(set);
     free(set);
 }
