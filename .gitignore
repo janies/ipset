@@ -1,5 +1,6 @@
 .sconf_temp/
 .sconsign.dblite
+.scons.vars*
 config.log
 
 *.[oa]

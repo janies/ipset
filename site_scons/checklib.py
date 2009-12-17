@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 Provides a function similar to CheckLib, but allows you to specify the
 directory where we expect to find the library.  Also defines a
@@ -7,14 +9,16 @@ command-line option that lets the user override this directory.
 from SCons.Script import *
 
 def CheckLibInPath(context, libname, library, call, header=""):
-    AddOption('--with_%s' % libname,
-              dest='%s_path' % libname,
-              type='string',
-              nargs=1,
-              action='store',
-              metavar='DIR',
-              default='/usr',
-              help='Location of %s library' % libname)
+    vars = Variables('.scons.vars.%s' % libname, ARGUMENTS)
+
+    vars.AddVariables(
+        PathVariable("with_%s" % libname,
+                     "Location of %s library" % libname,
+                     "/usr"),
+        )
+
+    vars.Update(context.env)
+    vars.Save('.scons.vars.%s' % libname, context.env)
 
     context.Message("Checking for %s..." % libname)
 
@@ -33,11 +37,9 @@ def CheckLibInPath(context, libname, library, call, header=""):
     except KeyError:
         lastCPPPATH = []
 
-    libpath = GetOption('%s_path' % libname)
-
     context.env.Append(LIBS=library,
-                       LIBPATH="%s/lib" % libpath,
-                       CPPPATH="%s/include" % libpath)
+                       LIBPATH="${with_%s}/lib" % libname,
+                       CPPPATH="${with_%s}/include" % libname)
 
     ret = context.TryLink("""
 %s

@@ -1,27 +1,28 @@
+# -*- coding: utf-8 -*-
+
 from checklib import *
 
 package = 'ipset'
 
-AddOption('--prefix',
-          dest='prefix',
-          type='string',
-          nargs=1,
-          action='store',
-          metavar='DIR',
-          default='/usr',
-          help='Installation prefix')
+vars = Variables('.scons.vars', ARGUMENTS)
 
-prefix = GetOption('prefix')
-bin = '%s/bin' % prefix
-include = '%s/include' % prefix
-lib = '%s/lib' % prefix
+vars.AddVariables(
+    PathVariable("prefix", "Installation prefix", "/usr",
+                 PathVariable.PathAccept),
+    )
 
-root_env = Environment(PREFIX = prefix,
-                       BINDIR = bin,
-                       LIBDIR = lib,
-                       INCLUDEDIR = include)
+
+root_env = Environment(BINDIR = "$prefix/bin",
+                       LIBDIR = "$prefix/lib",
+                       INCLUDEDIR = "$prefix/include")
 
 root_env.MergeFlags('-g -O2 -Wall -Werror')
+
+vars.Update(root_env)
+vars.Save(".scons.vars", root_env)
+
+# An action that can clean up the scons temporary files.  It won't get
+# called as part of “scons -c”, unfortunately...
 
 # Only run the configuration steps if we're actually going to build
 # something.
