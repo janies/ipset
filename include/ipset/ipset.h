@@ -11,6 +11,8 @@
 #ifndef IPSET_IPSET_H
 #define IPSET_IPSET_H
 
+#include <stdbool.h>
+
 #include <bdd.h>
 
 
@@ -75,6 +77,13 @@ ipset_ipv4_new();
 void
 ipset_ipv4_free(ipv4_set_t *set);
 
+/**
+ * Returns whether the IPv4 set is empty.
+ */
+
+bool
+ipset_ipv4_is_empty(ipv4_set_t *set);
+
 
 /*---------------------------------------------------------------------
  * IPv6 functions
@@ -112,6 +121,13 @@ ipset_ipv6_new();
 
 void
 ipset_ipv6_free(ipv6_set_t *set);
+
+/**
+ * Returns whether the IPv6 set is empty.
+ */
+
+bool
+ipset_ipv6_is_empty(ipv6_set_t *set);
 
 
 #endif  /* IPSET_IPSET_H */

@@ -37,3 +37,4 @@
  */
 
 #include "allocation-template.c"
+#include "inspection-template.c"
