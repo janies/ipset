@@ -21,8 +21,14 @@ root_env.MergeFlags('-g -O2 -Wall -Werror')
 vars.Update(root_env)
 vars.Save(".scons.vars", root_env)
 
-# An action that can clean up the scons temporary files.  It won't get
-# called as part of “scons -c”, unfortunately...
+# An action that can clean up the scons temporary files.
+
+root_env.Clean("clean-scons",
+               [
+                ".sconsign.dblite",
+                ".sconf_temp",
+                "config.log",
+               ])
 
 # Only run the configuration steps if we're actually going to build
 # something.
