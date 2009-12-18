@@ -109,6 +109,19 @@ ipset_ipv4_is_not_equal(ipv4_set_t *set1, ipv4_set_t *set2);
 bool
 ipset_ipv4_add(ipv4_set_t *set, void *elem);
 
+/**
+ * Adds a network of IPv4 addresses to an IPv4 set.  We don't care
+ * what specific type is used to represent address; elem should be a
+ * pointer to an address stored as a 32-bit big-endian integer.  All
+ * of the addresses that start with the first netmask bits of elem
+ * will be added to the set.
+ *
+ * Returns whether the network was already in the set or not.
+ */
+
+bool
+ipset_ipv4_add_network(ipv4_set_t *set, void *elem, int netmask);
+
 
 /*---------------------------------------------------------------------
  * IPv6 functions
@@ -178,6 +191,19 @@ ipset_ipv6_is_not_equal(ipv6_set_t *set1, ipv6_set_t *set2);
 
 bool
 ipset_ipv6_add(ipv6_set_t *set, void *elem);
+
+/**
+ * Adds a network of IPv6 addresses to an IPv6 set.  We don't care
+ * what specific type is used to represent address; elem should be a
+ * pointer to an address stored as a 32-bit big-endian integer.  All
+ * of the addresses that start with the first netmask bits of elem
+ * will be added to the set.
+ *
+ * Returns whether the network was already in the set or not.
+ */
+
+bool
+ipset_ipv6_add_network(ipv6_set_t *set, void *elem, int netmask);
 
 
 #endif  /* IPSET_IPSET_H */

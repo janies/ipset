@@ -14,7 +14,7 @@
 
 
 bool
-IPSET_NAME(add)(IP_SET_T *set, void *elem)
+IPSET_NAME(add_network)(IP_SET_T *set, void *elem, int netmask)
 {
     BDD  elem_bdd;
     BDD  new_set_bdd;
@@ -27,7 +27,7 @@ IPSET_NAME(add)(IP_SET_T *set, void *elem)
      * address.
      */
 
-    elem_bdd = IPSET_NAME(make_ip_bdd)(elem, IP_BIT_SIZE);
+    elem_bdd = IPSET_NAME(make_ip_bdd)(elem, netmask);
 
     /*
      * Add elem to the set by constructing the logical OR of the old
@@ -58,4 +58,11 @@ IPSET_NAME(add)(IP_SET_T *set, void *elem)
      */
 
     return elem_already_present;
+}
+
+
+bool
+IPSET_NAME(add)(IP_SET_T *set, void *elem)
+{
+    return IPSET_NAME(add_network)(set, elem, IP_BIT_SIZE);
 }

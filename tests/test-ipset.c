@@ -85,6 +85,22 @@ START_TEST(test_ipv4_insert)
 }
 END_TEST
 
+START_TEST(test_ipv4_insert_network)
+{
+    ipv4_set_t  set;
+
+    ipset_ipv4_init(&set);
+
+    fail_if(ipset_ipv4_add_network(&set, &IPV4_ADDR_1, 24),
+            "Element should not be present");
+
+    fail_unless(ipset_ipv4_add_network(&set, &IPV4_ADDR_1, 24),
+                "Element should be present");
+
+    ipset_ipv4_done(&set);
+}
+END_TEST
+
 START_TEST(test_ipv4_equality_1)
 {
     ipv4_set_t  set1, set2;
@@ -97,6 +113,24 @@ START_TEST(test_ipv4_equality_1)
 
     fail_unless(ipset_ipv4_is_equal(&set1, &set2),
                 "Expected {x} == {x}");
+
+    ipset_ipv4_done(&set1);
+    ipset_ipv4_done(&set2);
+}
+END_TEST
+
+START_TEST(test_ipv4_inequality_1)
+{
+    ipv4_set_t  set1, set2;
+
+    ipset_ipv4_init(&set1);
+    ipset_ipv4_add(&set1, &IPV4_ADDR_1);
+
+    ipset_ipv4_init(&set2);
+    ipset_ipv4_add_network(&set2, &IPV4_ADDR_1, 24);
+
+    fail_unless(ipset_ipv4_is_not_equal(&set1, &set2),
+                "Expected {x} != {x}");
 
     ipset_ipv4_done(&set1);
     ipset_ipv4_done(&set2);
@@ -161,6 +195,22 @@ START_TEST(test_ipv6_insert)
 }
 END_TEST
 
+START_TEST(test_ipv6_insert_network)
+{
+    ipv6_set_t  set;
+
+    ipset_ipv6_init(&set);
+
+    fail_if(ipset_ipv6_add_network(&set, &IPV6_ADDR_1, 32),
+            "Element should not be present");
+
+    fail_unless(ipset_ipv6_add_network(&set, &IPV6_ADDR_1, 32),
+                "Element should be present");
+
+    ipset_ipv6_done(&set);
+}
+END_TEST
+
 START_TEST(test_ipv6_equality_1)
 {
     ipv6_set_t  set1, set2;
@@ -173,6 +223,24 @@ START_TEST(test_ipv6_equality_1)
 
     fail_unless(ipset_ipv6_is_equal(&set1, &set2),
                 "Expected {x} == {x}");
+
+    ipset_ipv6_done(&set1);
+    ipset_ipv6_done(&set2);
+}
+END_TEST
+
+START_TEST(test_ipv6_inequality_1)
+{
+    ipv6_set_t  set1, set2;
+
+    ipset_ipv6_init(&set1);
+    ipset_ipv6_add(&set1, &IPV6_ADDR_1);
+
+    ipset_ipv6_init(&set2);
+    ipset_ipv6_add_network(&set2, &IPV6_ADDR_1, 32);
+
+    fail_unless(ipset_ipv6_is_not_equal(&set1, &set2),
+                "Expected {x} != {x}");
 
     ipset_ipv6_done(&set1);
     ipset_ipv6_done(&set2);
@@ -195,7 +263,9 @@ ipset_suite()
     tcase_add_test(tc_ipv4, test_ipv4_empty_sets_equal);
     tcase_add_test(tc_ipv4, test_ipv4_empty_sets_not_unequal);
     tcase_add_test(tc_ipv4, test_ipv4_insert);
+    tcase_add_test(tc_ipv4, test_ipv4_insert_network);
     tcase_add_test(tc_ipv4, test_ipv4_equality_1);
+    tcase_add_test(tc_ipv4, test_ipv4_inequality_1);
     suite_add_tcase(s, tc_ipv4);
 
     TCase  *tc_ipv6 = tcase_create("ipv6");
@@ -203,7 +273,9 @@ ipset_suite()
     tcase_add_test(tc_ipv4, test_ipv6_empty_sets_equal);
     tcase_add_test(tc_ipv4, test_ipv6_empty_sets_not_unequal);
     tcase_add_test(tc_ipv4, test_ipv6_insert);
+    tcase_add_test(tc_ipv4, test_ipv6_insert_network);
     tcase_add_test(tc_ipv4, test_ipv6_equality_1);
+    tcase_add_test(tc_ipv4, test_ipv6_inequality_1);
     suite_add_tcase(s, tc_ipv6);
 
     return s;
