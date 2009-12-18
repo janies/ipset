@@ -9,6 +9,7 @@
  */
 
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <bdd.h>
 #include <ipset/ipset.h>
@@ -43,4 +44,15 @@ IPSET_NAME(is_not_equal)(IP_SET_T *set1, IP_SET_T *set2)
      */
 
     return (set1->set_bdd != set2->set_bdd);
+}
+
+size_t
+IPSET_NAME(memory_size)(IP_SET_T *set)
+{
+    /*
+     * Unforunately, buddy hides the internal BddNode type, so we have
+     * to hardcode its size...
+     */
+
+    return 20 * bdd_nodecount(set->set_bdd);
 }

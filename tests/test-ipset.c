@@ -137,6 +137,44 @@ START_TEST(test_ipv4_inequality_1)
 }
 END_TEST
 
+START_TEST(test_ipv4_memory_size_1)
+{
+    ipv4_set_t  set;
+    size_t  expected, actual;
+
+    ipset_ipv4_init(&set);
+    ipset_ipv4_add(&set, &IPV4_ADDR_1);
+
+    expected = 640;
+    actual = ipset_ipv4_memory_size(&set);
+
+    fail_unless(expected == actual,
+                "Expected set to be %zu bytes, got %zu bytes",
+                expected, actual);
+
+    ipset_ipv4_done(&set);
+}
+END_TEST
+
+START_TEST(test_ipv4_memory_size_2)
+{
+    ipv4_set_t  set;
+    size_t  expected, actual;
+
+    ipset_ipv4_init(&set);
+    ipset_ipv4_add_network(&set, &IPV4_ADDR_1, 24);
+
+    expected = 480;
+    actual = ipset_ipv4_memory_size(&set);
+
+    fail_unless(expected == actual,
+                "Expected set to be %zu bytes, got %zu bytes",
+                expected, actual);
+
+    ipset_ipv4_done(&set);
+}
+END_TEST
+
 
 /*-----------------------------------------------------------------------
  * IPv6 tests
@@ -247,6 +285,43 @@ START_TEST(test_ipv6_inequality_1)
 }
 END_TEST
 
+START_TEST(test_ipv6_memory_size_1)
+{
+    ipv6_set_t  set;
+    size_t  expected, actual;
+
+    ipset_ipv6_init(&set);
+    ipset_ipv6_add(&set, &IPV6_ADDR_1);
+
+    expected = 2560;
+    actual = ipset_ipv6_memory_size(&set);
+
+    fail_unless(expected == actual,
+                "Expected set to be %zu bytes, got %zu bytes",
+                expected, actual);
+
+    ipset_ipv6_done(&set);
+}
+END_TEST
+
+START_TEST(test_ipv6_memory_size_2)
+{
+    ipv6_set_t  set;
+    size_t  expected, actual;
+
+    ipset_ipv6_init(&set);
+    ipset_ipv6_add_network(&set, &IPV6_ADDR_1, 24);
+
+    expected = 480;
+    actual = ipset_ipv6_memory_size(&set);
+
+    fail_unless(expected == actual,
+                "Expected set to be %zu bytes, got %zu bytes",
+                expected, actual);
+
+    ipset_ipv6_done(&set);
+}
+END_TEST
 
 
 /*-----------------------------------------------------------------------
@@ -266,6 +341,8 @@ ipset_suite()
     tcase_add_test(tc_ipv4, test_ipv4_insert_network);
     tcase_add_test(tc_ipv4, test_ipv4_equality_1);
     tcase_add_test(tc_ipv4, test_ipv4_inequality_1);
+    tcase_add_test(tc_ipv4, test_ipv4_memory_size_1);
+    tcase_add_test(tc_ipv4, test_ipv4_memory_size_2);
     suite_add_tcase(s, tc_ipv4);
 
     TCase  *tc_ipv6 = tcase_create("ipv6");
@@ -276,6 +353,8 @@ ipset_suite()
     tcase_add_test(tc_ipv4, test_ipv6_insert_network);
     tcase_add_test(tc_ipv4, test_ipv6_equality_1);
     tcase_add_test(tc_ipv4, test_ipv6_inequality_1);
+    tcase_add_test(tc_ipv4, test_ipv6_memory_size_1);
+    tcase_add_test(tc_ipv4, test_ipv6_memory_size_2);
     suite_add_tcase(s, tc_ipv6);
 
     return s;

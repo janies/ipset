@@ -12,6 +12,7 @@
 #define IPSET_IPSET_H
 
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <bdd.h>
 
@@ -122,6 +123,16 @@ ipset_ipv4_add(ipv4_set_t *set, void *elem);
 bool
 ipset_ipv4_add_network(ipv4_set_t *set, void *elem, int netmask);
 
+/**
+ * Returns the number of bytes needed to store the IP set.  Note that
+ * adding together the storage needed for each set you use doesn't
+ * necessarily give you the total memory requirements, since some
+ * storage can be shared between sets.
+ */
+
+size_t
+ipset_ipv4_memory_size(ipv4_set_t *set);
+
 
 /*---------------------------------------------------------------------
  * IPv6 functions
@@ -204,6 +215,16 @@ ipset_ipv6_add(ipv6_set_t *set, void *elem);
 
 bool
 ipset_ipv6_add_network(ipv6_set_t *set, void *elem, int netmask);
+
+/**
+ * Returns the number of bytes needed to store the IP set.  Note that
+ * adding together the storage needed for each set you use doesn't
+ * necessarily give you the total memory requirements, since some
+ * storage can be shared between sets.
+ */
+
+size_t
+ipset_ipv6_memory_size(ipv6_set_t *set);
 
 
 #endif  /* IPSET_IPSET_H */
