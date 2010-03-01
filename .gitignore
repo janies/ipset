@@ -2,6 +2,7 @@
 .sconsign.dblite
 .scons.vars*
 config.log
+utiltmp
 
 *.[oa]
 *.os

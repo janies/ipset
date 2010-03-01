@@ -12,20 +12,21 @@
 #define IPSET_IPSET_H
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <unistd.h>
 
-#include <bdd.h>
+#include <cudd.h>
 
 
 typedef struct ipv4_set
 {
-    BDD  set_bdd;
+    DdNode  *set_bdd;
 } ipv4_set_t;
 
 
 typedef struct ipv6_set
 {
-    BDD  set_bdd;
+    DdNode  *set_bdd;
 } ipv6_set_t;
 
 

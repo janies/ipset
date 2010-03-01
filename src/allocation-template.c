@@ -10,8 +10,9 @@
 
 #include <stdlib.h>
 
-#include <bdd.h>
+#include <cudd.h>
 #include <ipset/ipset.h>
+#include <ipset/internal.h>
 
 
 void
@@ -22,7 +23,8 @@ IPSET_NAME(init)(IP_SET_T *set)
      * false.
      */
 
-    set->set_bdd = bdd_addref(bddfalse);
+    set->set_bdd = Cudd_ReadLogicZero(ipset_manager);
+    Cudd_Ref(set->set_bdd);
 }
 
 
@@ -51,7 +53,7 @@ IPSET_NAME(new)()
 void
 IPSET_NAME(done)(IP_SET_T *set)
 {
-    bdd_delref(set->set_bdd);
+    Cudd_RecursiveDeref(ipset_manager, set->set_bdd);
 }
 
 

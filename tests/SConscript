@@ -2,17 +2,16 @@ Import('root_env', 'libipset')
 
 env = root_env.Clone()
 
-env.Prepend(CPPPATH=["#/include", "$check_CPPPATH"],
-            LIBPATH=["#/src", "$check_LIBPATH"])
+env.Prepend(CPPPATH=["#/include"],
+            LIBPATH=["#/src"],
+            LIBS=[libipset])
 
 test_ipset_files = \
     [
      "test-ipset.c",
     ]
 
-test_ipset = env.Program("test-ipset",
-                         ["test-ipset.c"],
-                         LIBS=[libipset, "$check_LIB"])
+test_ipset = env.Program("test-ipset", ["test-ipset.c"])
 
 env.Alias("build-tests", test_ipset)
 test = env.Alias("test", [test_ipset],

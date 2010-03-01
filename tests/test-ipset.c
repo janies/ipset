@@ -145,7 +145,7 @@ START_TEST(test_ipv4_memory_size_1)
     ipset_ipv4_init(&set);
     ipset_ipv4_add(&set, &IPV4_ADDR_1);
 
-    expected = 640;
+    expected = 1056;
     actual = ipset_ipv4_memory_size(&set);
 
     fail_unless(expected == actual,
@@ -164,7 +164,7 @@ START_TEST(test_ipv4_memory_size_2)
     ipset_ipv4_init(&set);
     ipset_ipv4_add_network(&set, &IPV4_ADDR_1, 24);
 
-    expected = 480;
+    expected = 800;
     actual = ipset_ipv4_memory_size(&set);
 
     fail_unless(expected == actual,
@@ -293,7 +293,7 @@ START_TEST(test_ipv6_memory_size_1)
     ipset_ipv6_init(&set);
     ipset_ipv6_add(&set, &IPV6_ADDR_1);
 
-    expected = 2560;
+    expected = 4128;
     actual = ipset_ipv6_memory_size(&set);
 
     fail_unless(expected == actual,
@@ -312,7 +312,7 @@ START_TEST(test_ipv6_memory_size_2)
     ipset_ipv6_init(&set);
     ipset_ipv6_add_network(&set, &IPV6_ADDR_1, 24);
 
-    expected = 480;
+    expected = 800;
     actual = ipset_ipv6_memory_size(&set);
 
     fail_unless(expected == actual,

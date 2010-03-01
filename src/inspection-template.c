@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <bdd.h>
+#include <cudd.h>
 #include <ipset/ipset.h>
 
 bool
@@ -21,7 +21,7 @@ IPSET_NAME(is_empty)(IP_SET_T *set)
      * Since BDDs are unique, the only empty set is the “false” BDD.
      */
 
-    return (set->set_bdd == bddfalse);
+    return (set->set_bdd == Cudd_ReadLogicZero(ipset_manager));
 }
 
 bool
@@ -54,5 +54,5 @@ IPSET_NAME(memory_size)(IP_SET_T *set)
      * to hardcode its size...
      */
 
-    return 20 * bdd_nodecount(set->set_bdd);
+    return sizeof(DdNode) * Cudd_DagSize(set->set_bdd);
 }

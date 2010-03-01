@@ -8,7 +8,7 @@
  * ----------------------------------------------------------------------
  */
 
-#include <bdd.h>
+#include <cudd.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
@@ -16,8 +16,8 @@
 bool
 IPSET_NAME(add_network)(IP_SET_T *set, void *elem, int netmask)
 {
-    BDD  elem_bdd;
-    BDD  new_set_bdd;
+    DdNode  *elem_bdd;
+    DdNode  *new_set_bdd;
     bool  elem_already_present;
 
     /*
@@ -34,7 +34,8 @@ IPSET_NAME(add_network)(IP_SET_T *set, void *elem, int netmask)
      * set and the new element's BDD.
      */
 
-    new_set_bdd = bdd_addref(bdd_or(set->set_bdd, elem_bdd));
+    new_set_bdd = Cudd_bddOr(ipset_manager, set->set_bdd, elem_bdd);
+    Cudd_Ref(new_set_bdd);
 
     /*
      * If the BDD representing the set hasn't changed, then the
@@ -49,8 +50,7 @@ IPSET_NAME(add_network)(IP_SET_T *set, void *elem, int netmask)
      * anymore.
      */
 
-    bdd_delref(set->set_bdd);
-    bdd_delref(elem_bdd);
+    Cudd_RecursiveDeref(ipset_manager, set->set_bdd);
     set->set_bdd = new_set_bdd;
 
     /*

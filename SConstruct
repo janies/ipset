@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from checklib import *
+from pkgconfig import *
+import sys
 
 package = 'ipset'
 
@@ -39,31 +40,29 @@ root_env.Clean("clean-scons",
 if not GetOption('clean') and not GetOption('help'):
     conf = root_env.Configure(custom_tests=
                               {
-                               'CheckLibInPath': CheckLibInPath,
+                               'CheckPKGConfig' : CheckPKGConfig,
+                               'CheckPKG' : CheckPKG,
                               })
+
+    if not conf.CheckPKGConfig('0.15.0'):
+        print 'pkg-config >= 0.15.0 not found.'
+        Exit(0)
 
     if not conf.CheckCC():
         print "!! Your compiler and/or environment is not properly configured."
         Exit(0)
 
-
-    if not conf.CheckLibInPath("buddy",
-                               library="bdd",
-                               call="bdd_init(1000, 1000)",
-                               header="#include <bdd.h>"):
+    if not conf.CheckPKG("cudd"):
         print "!! Cannot find the buddy library."
         Exit(0)
 
-
-    if not conf.CheckLibInPath("check",
-                               library="check",
-                               call="",
-                               header="#include <check.h>"):
+    if not conf.CheckPKG("check"):
         print "!! Cannot find the check library."
         Exit(0)
 
-
     root_env = conf.Finish()
+    root_env.ParseConfig("pkg-config --cflags --libs cudd")
+    root_env.ParseConfig("pkg-config --cflags --libs check")
 
 # Include the subdirectory SConscripts
 

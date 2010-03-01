@@ -11,7 +11,7 @@
 #ifndef IPSET_INTERNAL_H
 #define IPSET_INTERNAL_H
 
-#include <bdd.h>
+#include <cudd.h>
 
 #include <ipset/ipset.h>
 
@@ -23,16 +23,22 @@
 #define IPV6_BIT_SIZE  128
 
 /*
- * The BDD variable number for the 0th bit of an IP address.  (We
- * count bits starting from the MSB.)
+ * The CUDD manager for the IP set functions.
  */
 
-extern int ipset_ipv4_starting_var;
-extern int ipset_ipv6_starting_var;
+extern DdManager *ipset_manager;
+
+/*
+ * The BDD variable node for the ith bit of an IP address.  (We count
+ * bits starting from the MSB.)
+ */
+
+extern DdNode *ipset_ipv4_var[IPV4_BIT_SIZE];
+extern DdNode *ipset_ipv6_var[IPV6_BIT_SIZE];
 
 /*
  * Allocate a BDD variable for each bit of an IP address, initializing
- * the ipset_ipvX_starting_var variable.
+ * the ipset_ipvX_var variable.
  */
 
 void
@@ -49,10 +55,10 @@ ipset_ipv6_init_vars();
  * IPVX_BIT_SIZE, then an entire network will be added to the set.
  */
 
-BDD
+DdNode *
 ipset_ipv4_make_ip_bdd(void *addr, int netmask);
 
-BDD
+DdNode *
 ipset_ipv6_make_ip_bdd(void *addr, int netmask);
 
 #endif  /* IPSET_INTERNAL_H */

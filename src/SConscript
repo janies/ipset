@@ -2,8 +2,7 @@ Import('root_env')
 
 env = root_env.Clone()
 
-env.Prepend(CPPPATH=["#/include", ".", "$buddy_CPPPATH"],
-            LIBPATH=["$buddy_LIBPATH"])
+env.Prepend(CPPPATH=["#/include", "."])
 
 libipset_files = \
     [
@@ -12,8 +11,7 @@ libipset_files = \
      "ipv6_set.c",
     ]
 
-libipset = env.SharedLibrary("ipset", libipset_files,
-                             LIBS=["$buddy_LIB"])
+libipset = env.SharedLibrary("ipset", libipset_files)
 env.Alias("install", env.Install(env["LIBDIR"], libipset))
 Default(libipset)
 

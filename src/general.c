@@ -8,17 +8,26 @@
  * ----------------------------------------------------------------------
  */
 
-#include <bdd.h>
+#include <stdbool.h>
+#include <stdio.h>
+
+#include <cudd.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
+DdManager *
+ipset_manager = NULL;
+
 int ipset_init()
 {
-    if (!bdd_isrunning())
+    if (ipset_manager == NULL)
     {
-        int result = bdd_init(100000, 10000);
-        if (result < 0)
-            return result;
+        ipset_manager = Cudd_Init(IPV4_BIT_SIZE + IPV6_BIT_SIZE, 0,
+                                  CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS,
+                                  0);
+
+        if (ipset_manager == NULL)
+            return 1;
 
         ipset_ipv4_init_vars();
         ipset_ipv6_init_vars();

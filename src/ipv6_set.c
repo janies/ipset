@@ -8,6 +8,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include <stdio.h>
 
 /*
  * The IPv4 and IPv6 set types are basically identical, except for the
