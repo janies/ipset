@@ -50,6 +50,7 @@ IPSET_NAME(add_network)(IP_SET_T *set, void *elem, int netmask)
      * anymore.
      */
 
+    Cudd_RecursiveDeref(ipset_manager, elem_bdd);
     Cudd_RecursiveDeref(ipset_manager, set->set_bdd);
     set->set_bdd = new_set_bdd;
 

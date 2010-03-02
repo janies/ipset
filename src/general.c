@@ -22,15 +22,19 @@ int ipset_init()
 {
     if (ipset_manager == NULL)
     {
-        ipset_manager = Cudd_Init(IPV4_BIT_SIZE + IPV6_BIT_SIZE, 0,
+        ipset_manager = Cudd_Init(10 * (IPV4_BIT_SIZE + IPV6_BIT_SIZE),
+                                  0,
                                   CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS,
                                   0);
 
         if (ipset_manager == NULL)
             return 1;
 
-        ipset_ipv4_init_vars();
-        ipset_ipv6_init_vars();
+        ipmap_ipv4_init_add_vars();
+        ipmap_ipv6_init_add_vars();
+
+        ipset_ipv4_init_bdd_vars();
+        ipset_ipv6_init_bdd_vars();
 
         return 0;
     } else {

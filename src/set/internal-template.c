@@ -16,17 +16,17 @@
 #include <ipset/internal.h>
 
 
-DdNode *IPSET_NAME(var)[IP_BIT_SIZE];
+DdNode *IPSET_NAME(bdd_var)[IP_BIT_SIZE];
 
 
 void
-IPSET_NAME(init_vars)()
+IPSET_NAME(init_bdd_vars)()
 {
     unsigned int  i;
 
     for (i = 0; i < IP_BIT_SIZE; i++)
     {
-        IPSET_NAME(var)[i] = Cudd_bddNewVar(ipset_manager);
+        IPSET_NAME(bdd_var)[i] = Cudd_bddNewVar(ipset_manager);
     }
 }
 
@@ -47,7 +47,7 @@ IPSET_NAME(make_ip_bdd)(void *vaddr, int netmask)
         DdNode  *this_bit;
         DdNode  *next;
 
-        this_bit = IPSET_NAME(var)[i];
+        this_bit = IPSET_NAME(bdd_var)[i];
 
         if ((addr[byte_index] & bit_mask) == 0)
         {

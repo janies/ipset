@@ -49,10 +49,5 @@ IPSET_NAME(is_not_equal)(IP_SET_T *set1, IP_SET_T *set2)
 size_t
 IPSET_NAME(memory_size)(IP_SET_T *set)
 {
-    /*
-     * Unforunately, buddy hides the internal BddNode type, so we have
-     * to hardcode its size...
-     */
-
     return sizeof(DdNode) * Cudd_DagSize(set->set_bdd);
 }

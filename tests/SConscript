@@ -1,3 +1,5 @@
+import os
+
 Import('root_env', 'libipset')
 
 env = root_env.Clone()
@@ -6,18 +8,29 @@ env.Prepend(CPPPATH=["#/include"],
             LIBPATH=["#/src"],
             LIBS=[libipset])
 
-test_ipset_files = \
-    [
-     "test-ipset.c",
-    ]
 
-test_ipset = env.Program("test-ipset", ["test-ipset.c"])
+# Give each test program an RPATH, so that it can find the ipset
+# library while they're still in the source tree.
 
-env.Alias("build-tests", test_ipset)
-test = env.Alias("test", [test_ipset],
-                 ["@echo Running tests...",
-                  "@%s" % test_ipset[0].abspath])
-env.AlwaysBuild(test)
+rpath = [env.Literal(os.path.join('\\$$ORIGIN', os.pardir, 'src'))]
+
+
+def add_test(test_program):
+    c_file = "%s.c" % test_program
+
+    target = env.Program(test_program, [c_file],
+                         RPATH=rpath)
+    env.Alias("build-tests", target)
+
+    run_test_target = env.Alias(test_program, [target],
+                                ["@%s" % target[0].abspath])
+    env.Alias("test", run_test_target)
+    env.AlwaysBuild(run_test_target)
+
+
+add_test("test-ipset")
+add_test("test-ipmap")
+
 
 # Don't build the tests by default; but clean them by default.
 
