@@ -18,7 +18,7 @@
 DdManager *
 ipset_manager = NULL;
 
-int ipset_init()
+int ipset_init_library()
 {
     if (ipset_manager == NULL)
     {

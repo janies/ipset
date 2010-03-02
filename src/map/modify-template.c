@@ -14,7 +14,7 @@
 
 
 void
-IPMAP_NAME(set_network)(IP_MAP_T *map,
+IPMAP_NAME(set_network)(ip_map_t *map,
                         void *elem,
                         int netmask,
                         intptr_t value)
@@ -73,14 +73,14 @@ IPMAP_NAME(set_network)(IP_MAP_T *map,
 
 
 void
-IPMAP_NAME(set)(IP_MAP_T *map, void *elem, intptr_t value)
+IPMAP_NAME(set)(ip_map_t *map, void *elem, intptr_t value)
 {
     return IPMAP_NAME(set_network)(map, elem, IP_BIT_SIZE, value);
 }
 
 
 void
-IPMAP_NAME(set_network_ptr)(IP_MAP_T *map,
+IPMAP_NAME(set_network_ptr)(ip_map_t *map,
                             void *elem,
                             int netmask,
                             void *value)
@@ -91,7 +91,7 @@ IPMAP_NAME(set_network_ptr)(IP_MAP_T *map,
 
 
 void
-IPMAP_NAME(set_ptr)(IP_MAP_T *map, void *elem, void *value)
+IPMAP_NAME(set_ptr)(ip_map_t *map, void *elem, void *value)
 {
     return IPMAP_NAME(set)(map, elem, (intptr_t) value);
 }

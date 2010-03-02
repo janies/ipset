@@ -8,8 +8,6 @@
  * ----------------------------------------------------------------------
  */
 
-#include <stdio.h>
-
 /*
  * The IPv4 and IPv6 map types are basically identical, except for the
  * names of the functions, and the size of the values that are being
@@ -43,7 +41,6 @@
  * Now include all of the templates.
  */
 
-#include "allocation-template.c"
 #include "inspection-template.c"
 #include "internal-template.c"
 #include "modify-template.c"

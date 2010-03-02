@@ -14,7 +14,7 @@
 
 
 bool
-IPSET_NAME(add_network)(IP_SET_T *set, void *elem, int netmask)
+IPSET_NAME(add_network)(ip_set_t *set, void *elem, int netmask)
 {
     DdNode  *elem_bdd;
     DdNode  *new_set_bdd;
@@ -63,7 +63,7 @@ IPSET_NAME(add_network)(IP_SET_T *set, void *elem, int netmask)
 
 
 bool
-IPSET_NAME(add)(IP_SET_T *set, void *elem)
+IPSET_NAME(add)(ip_set_t *set, void *elem)
 {
     return IPSET_NAME(add_network)(set, elem, IP_BIT_SIZE);
 }

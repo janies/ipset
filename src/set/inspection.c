@@ -9,13 +9,15 @@
  */
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #include <cudd.h>
 #include <ipset/ipset.h>
+#include <ipset/internal.h>
 
 bool
-IPSET_NAME(is_empty)(IP_SET_T *set)
+ipset_is_empty(ip_set_t *set)
 {
     /*
      * Since BDDs are unique, the only empty set is the “false” BDD.
@@ -25,7 +27,7 @@ IPSET_NAME(is_empty)(IP_SET_T *set)
 }
 
 bool
-IPSET_NAME(is_equal)(IP_SET_T *set1, IP_SET_T *set2)
+ipset_is_equal(ip_set_t *set1, ip_set_t *set2)
 {
     /*
      * Since BDDs are unique, sets can only be equal if their BDDs are
@@ -36,7 +38,7 @@ IPSET_NAME(is_equal)(IP_SET_T *set1, IP_SET_T *set2)
 }
 
 bool
-IPSET_NAME(is_not_equal)(IP_SET_T *set1, IP_SET_T *set2)
+ipset_is_not_equal(ip_set_t *set1, ip_set_t *set2)
 {
     /*
      * Since BDDs are unique, sets can only be equal if their BDDs are
@@ -47,7 +49,7 @@ IPSET_NAME(is_not_equal)(IP_SET_T *set1, IP_SET_T *set2)
 }
 
 size_t
-IPSET_NAME(memory_size)(IP_SET_T *set)
+ipset_memory_size(ip_set_t *set)
 {
     return sizeof(DdNode) * Cudd_DagSize(set->set_bdd);
 }

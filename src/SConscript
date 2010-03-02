@@ -7,8 +7,12 @@ env.Prepend(CPPPATH=["#/include", "."])
 libipset_files = \
     [
      "general.c",
+     "map/allocation.c",
+     "map/inspection.c",
      "map/ipv4_map.c",
      "map/ipv6_map.c",
+     "set/allocation.c",
+     "set/inspection.c",
      "set/ipv4_set.c",
      "set/ipv6_set.c",
     ]

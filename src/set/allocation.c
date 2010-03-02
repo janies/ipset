@@ -9,6 +9,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <cudd.h>
 #include <ipset/ipset.h>
@@ -16,7 +17,7 @@
 
 
 void
-IPSET_NAME(init)(IP_SET_T *set)
+ipset_init(ip_set_t *set)
 {
     /*
      * The set starts empty, so every value assignment should yield
@@ -28,16 +29,16 @@ IPSET_NAME(init)(IP_SET_T *set)
 }
 
 
-IP_SET_T *
-IPSET_NAME(new)()
+ip_set_t *
+ipset_new()
 {
-    IP_SET_T  *result = NULL;
+    ip_set_t  *result = NULL;
 
     /*
      * Try to allocate a new set.
      */
 
-    result = (IP_SET_T *) malloc(sizeof(IP_SET_T));
+    result = (ip_set_t *) malloc(sizeof(ip_set_t));
     if (result == NULL)
         return NULL;
 
@@ -45,21 +46,21 @@ IPSET_NAME(new)()
      * If that worked, initialize and return the set.
      */
 
-    IPSET_NAME(init)(result);
+    ipset_init(result);
     return result;
 }
 
 
 void
-IPSET_NAME(done)(IP_SET_T *set)
+ipset_done(ip_set_t *set)
 {
     Cudd_RecursiveDeref(ipset_manager, set->set_bdd);
 }
 
 
 void
-IPSET_NAME(free)(IP_SET_T *set)
+ipset_free(ip_set_t *set)
 {
-    IPSET_NAME(done)(set);
+    ipset_done(set);
     free(set);
 }

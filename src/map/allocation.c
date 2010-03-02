@@ -9,6 +9,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <cudd.h>
 #include <ipset/ipset.h>
@@ -16,7 +17,7 @@
 
 
 void
-IPMAP_NAME(init)(IP_MAP_T *map, intptr_t default_value)
+ipmap_init(ip_map_t *map, intptr_t default_value)
 {
     /*
      * The map starts empty, so every value assignment should yield
@@ -32,16 +33,16 @@ IPMAP_NAME(init)(IP_MAP_T *map, intptr_t default_value)
 }
 
 
-IP_MAP_T *
-IPMAP_NAME(new)(intptr_t default_value)
+ip_map_t *
+ipmap_new(intptr_t default_value)
 {
-    IP_MAP_T  *result = NULL;
+    ip_map_t  *result = NULL;
 
     /*
      * Try to allocate a new map.
      */
 
-    result = (IP_MAP_T *) malloc(sizeof(IP_MAP_T));
+    result = (ip_map_t *) malloc(sizeof(ip_map_t));
     if (result == NULL)
         return NULL;
 
@@ -49,27 +50,27 @@ IPMAP_NAME(new)(intptr_t default_value)
      * If that worked, initialize and return the map.
      */
 
-    IPMAP_NAME(init)(result, default_value);
+    ipmap_init(result, default_value);
     return result;
 }
 
 
 void
-IPMAP_NAME(init_ptr)(IP_MAP_T *map, void *default_value)
+ipmap_init_ptr(ip_map_t *map, void *default_value)
 {
-    return IPMAP_NAME(init)(map, (intptr_t) default_value);
+    return ipmap_init(map, (intptr_t) default_value);
 }
 
 
-IP_MAP_T *
-IPMAP_NAME(new_ptr)(void *default_value)
+ip_map_t *
+ipmap_new_ptr(void *default_value)
 {
-    return IPMAP_NAME(new)((intptr_t) default_value);
+    return ipmap_new((intptr_t) default_value);
 }
 
 
 void
-IPMAP_NAME(done)(IP_MAP_T *map)
+ipmap_done(ip_map_t *map)
 {
     Cudd_RecursiveDeref(ipset_manager, map->map_add);
     Cudd_RecursiveDeref(ipset_manager, map->default_add);
@@ -77,8 +78,8 @@ IPMAP_NAME(done)(IP_MAP_T *map)
 
 
 void
-IPMAP_NAME(free)(IP_MAP_T *map)
+ipmap_free(ip_map_t *map)
 {
-    IPMAP_NAME(done)(map);
+    ipmap_done(map);
     free(map);
 }

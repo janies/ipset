@@ -43,7 +43,6 @@
  * Now include all of the templates.
  */
 
-#include "allocation-template.c"
 #include "inspection-template.c"
 #include "internal-template.c"
 #include "modify-template.c"
