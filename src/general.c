@@ -22,8 +22,7 @@ int ipset_init()
 {
     if (ipset_manager == NULL)
     {
-        ipset_manager = Cudd_Init(10 * (IPV4_BIT_SIZE + IPV6_BIT_SIZE),
-                                  0,
+        ipset_manager = Cudd_Init(0, 0,
                                   CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS,
                                   0);
 
