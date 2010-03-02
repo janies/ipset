@@ -180,6 +180,30 @@ START_TEST(test_ipv4_insert_network_03)
 }
 END_TEST
 
+START_TEST(test_ipv4_bad_netmask_01)
+{
+    ipv4_map_t  map;
+
+    ipmap_ipv4_init(&map, 0);
+    ipmap_ipv4_set_network(&map, &IPV4_ADDR_1, 0, 1);
+    fail_unless(ipmap_ipv4_is_empty(&map),
+                "Bad netmask shouldn't change map");
+    ipmap_ipv4_done(&map);
+}
+END_TEST
+
+START_TEST(test_ipv4_bad_netmask_02)
+{
+    ipv4_map_t  map;
+
+    ipmap_ipv4_init(&map, 0);
+    ipmap_ipv4_set_network(&map, &IPV4_ADDR_1, 33, 1);
+    fail_unless(ipmap_ipv4_is_empty(&map),
+                "Bad netmask shouldn't change map");
+    ipmap_ipv4_done(&map);
+}
+END_TEST
+
 START_TEST(test_ipv4_equality_1)
 {
     ipv4_map_t  map1, map2;
@@ -418,6 +442,30 @@ START_TEST(test_ipv6_insert_network_03)
 }
 END_TEST
 
+START_TEST(test_ipv6_bad_netmask_01)
+{
+    ipv6_map_t  map;
+
+    ipmap_ipv6_init(&map, 0);
+    ipmap_ipv6_set_network(&map, &IPV6_ADDR_1, 0, 1);
+    fail_unless(ipmap_ipv6_is_empty(&map),
+                "Bad netmask shouldn't change map");
+    ipmap_ipv6_done(&map);
+}
+END_TEST
+
+START_TEST(test_ipv6_bad_netmask_02)
+{
+    ipv6_map_t  map;
+
+    ipmap_ipv6_init(&map, 0);
+    ipmap_ipv6_set_network(&map, &IPV6_ADDR_1, 129, 1);
+    fail_unless(ipmap_ipv6_is_empty(&map),
+                "Bad netmask shouldn't change map");
+    ipmap_ipv6_done(&map);
+}
+END_TEST
+
 START_TEST(test_ipv6_equality_1)
 {
     ipv6_map_t  map1, map2;
@@ -531,6 +579,8 @@ ipmap_suite()
     tcase_add_test(tc_ipv4, test_ipv4_insert_network_01);
     tcase_add_test(tc_ipv4, test_ipv4_insert_network_02);
     tcase_add_test(tc_ipv4, test_ipv4_insert_network_03);
+    tcase_add_test(tc_ipv4, test_ipv4_bad_netmask_01);
+    tcase_add_test(tc_ipv4, test_ipv4_bad_netmask_02);
     tcase_add_test(tc_ipv4, test_ipv4_equality_1);
     tcase_add_test(tc_ipv4, test_ipv4_inequality_1);
     tcase_add_test(tc_ipv4, test_ipv4_inequality_2);
@@ -549,6 +599,8 @@ ipmap_suite()
     tcase_add_test(tc_ipv6, test_ipv6_insert_network_01);
     tcase_add_test(tc_ipv6, test_ipv6_insert_network_02);
     tcase_add_test(tc_ipv6, test_ipv6_insert_network_03);
+    tcase_add_test(tc_ipv6, test_ipv6_bad_netmask_01);
+    tcase_add_test(tc_ipv6, test_ipv6_bad_netmask_02);
     tcase_add_test(tc_ipv6, test_ipv6_equality_1);
     tcase_add_test(tc_ipv6, test_ipv6_inequality_1);
     tcase_add_test(tc_ipv6, test_ipv6_inequality_2);

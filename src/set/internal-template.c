@@ -38,6 +38,16 @@ IPSET_NAME(make_ip_bdd)(void *vaddr, int netmask)
     DdNode  *result = Cudd_ReadOne(ipset_manager);
     int  i;
 
+    /*
+     * Special case — the BDD for a netmask that's out of range never
+     * evaluates to true.
+     */
+
+    if ((netmask <= 0) || (netmask > IP_BIT_SIZE))
+    {
+        return Cudd_ReadLogicZero(ipset_manager);
+    }
+
     Cudd_Ref(result);
     for (i = 0; i < netmask; i++)
     {

@@ -101,6 +101,30 @@ START_TEST(test_ipv4_insert_network)
 }
 END_TEST
 
+START_TEST(test_ipv4_bad_netmask_01)
+{
+    ipv4_set_t  set;
+
+    ipset_ipv4_init(&set);
+    ipset_ipv4_add_network(&set, &IPV4_ADDR_1, 0);
+    fail_unless(ipset_ipv4_is_empty(&set),
+                "Bad netmask shouldn't change set");
+    ipset_ipv4_done(&set);
+}
+END_TEST
+
+START_TEST(test_ipv4_bad_netmask_02)
+{
+    ipv4_set_t  set;
+
+    ipset_ipv4_init(&set);
+    ipset_ipv4_add_network(&set, &IPV4_ADDR_1, 33);
+    fail_unless(ipset_ipv4_is_empty(&set),
+                "Bad netmask shouldn't change set");
+    ipset_ipv4_done(&set);
+}
+END_TEST
+
 START_TEST(test_ipv4_equality_1)
 {
     ipv4_set_t  set1, set2;
@@ -249,6 +273,30 @@ START_TEST(test_ipv6_insert_network)
 }
 END_TEST
 
+START_TEST(test_ipv6_bad_netmask_01)
+{
+    ipv6_set_t  set;
+
+    ipset_ipv6_init(&set);
+    ipset_ipv6_add_network(&set, &IPV6_ADDR_1, 0);
+    fail_unless(ipset_ipv6_is_empty(&set),
+                "Bad netmask shouldn't change set");
+    ipset_ipv6_done(&set);
+}
+END_TEST
+
+START_TEST(test_ipv6_bad_netmask_02)
+{
+    ipv6_set_t  set;
+
+    ipset_ipv6_init(&set);
+    ipset_ipv6_add_network(&set, &IPV6_ADDR_1, 129);
+    fail_unless(ipset_ipv6_is_empty(&set),
+                "Bad netmask shouldn't change set");
+    ipset_ipv6_done(&set);
+}
+END_TEST
+
 START_TEST(test_ipv6_equality_1)
 {
     ipv6_set_t  set1, set2;
@@ -339,6 +387,8 @@ ipset_suite()
     tcase_add_test(tc_ipv4, test_ipv4_empty_sets_not_unequal);
     tcase_add_test(tc_ipv4, test_ipv4_insert);
     tcase_add_test(tc_ipv4, test_ipv4_insert_network);
+    tcase_add_test(tc_ipv4, test_ipv4_bad_netmask_01);
+    tcase_add_test(tc_ipv4, test_ipv4_bad_netmask_02);
     tcase_add_test(tc_ipv4, test_ipv4_equality_1);
     tcase_add_test(tc_ipv4, test_ipv4_inequality_1);
     tcase_add_test(tc_ipv4, test_ipv4_memory_size_1);
@@ -347,14 +397,16 @@ ipset_suite()
 
     TCase  *tc_ipv6 = tcase_create("ipv6");
     tcase_add_test(tc_ipv6, test_ipv6_starts_empty);
-    tcase_add_test(tc_ipv4, test_ipv6_empty_sets_equal);
-    tcase_add_test(tc_ipv4, test_ipv6_empty_sets_not_unequal);
-    tcase_add_test(tc_ipv4, test_ipv6_insert);
-    tcase_add_test(tc_ipv4, test_ipv6_insert_network);
-    tcase_add_test(tc_ipv4, test_ipv6_equality_1);
-    tcase_add_test(tc_ipv4, test_ipv6_inequality_1);
-    tcase_add_test(tc_ipv4, test_ipv6_memory_size_1);
-    tcase_add_test(tc_ipv4, test_ipv6_memory_size_2);
+    tcase_add_test(tc_ipv6, test_ipv6_empty_sets_equal);
+    tcase_add_test(tc_ipv6, test_ipv6_empty_sets_not_unequal);
+    tcase_add_test(tc_ipv6, test_ipv6_insert);
+    tcase_add_test(tc_ipv6, test_ipv6_insert_network);
+    tcase_add_test(tc_ipv6, test_ipv6_bad_netmask_01);
+    tcase_add_test(tc_ipv6, test_ipv6_bad_netmask_02);
+    tcase_add_test(tc_ipv6, test_ipv6_equality_1);
+    tcase_add_test(tc_ipv6, test_ipv6_inequality_1);
+    tcase_add_test(tc_ipv6, test_ipv6_memory_size_1);
+    tcase_add_test(tc_ipv6, test_ipv6_memory_size_2);
     suite_add_tcase(s, tc_ipv6);
 
     return s;

@@ -69,6 +69,16 @@ IPMAP_NAME(make_ip_add)(void *vaddr, int netmask)
     DdNode  *result = Cudd_ReadOne(ipset_manager);
     int  i;
 
+    /*
+     * Special case — the ADD for a netmask that's out of range never
+     * evaluates to true.
+     */
+
+    if ((netmask <= 0) || (netmask > IP_BIT_SIZE))
+    {
+        return Cudd_ReadZero(ipset_manager);
+    }
+
     Cudd_Ref(result);
     for (i = 0; i < netmask; i++)
     {
