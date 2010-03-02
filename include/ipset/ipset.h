@@ -113,6 +113,24 @@ size_t
 ipset_memory_size(ip_set_t *set);
 
 /**
+ * Saves an IP set to disk.  Returns a boolean indicating whether the
+ * operation was successful.  The caller is responsible for opening
+ * and closing the stream.
+ */
+
+bool
+ipset_save(ip_set_t *set, FILE *file);
+
+/**
+ * Loads an IP set from disk.  Returns NULL if the set cannot be
+ * loaded.  The caller is responsible for opening and closing the
+ * stream.
+ */
+
+ip_set_t *
+ipset_load(FILE *file);
+
+/**
  * Adds a single IPv4 address to an IP set.  We don't care what
  * specific type is used to represent the address; elem should be a
  * pointer to an address stored as a 32-bit big-endian integer.
@@ -254,6 +272,24 @@ ipmap_is_not_equal(ip_map_t *map1, ip_map_t *map2);
 
 size_t
 ipmap_memory_size(ip_map_t *map);
+
+/**
+ * Saves an IP map to disk.  Returns a boolean indicating whether the
+ * operation was successful.  The caller is responsible for opening
+ * and closing the stream.
+ */
+
+bool
+ipmap_save(ip_map_t *map, FILE *file);
+
+/**
+ * Loads an IP map from disk.  Returns NULL if the map cannot be
+ * loaded.  The caller is responsible for opening and closing the
+ * stream.
+ */
+
+ip_map_t *
+ipmap_load(FILE *file);
 
 /**
  * Adds a single IPv4 address to an IP map, with the given value.  The

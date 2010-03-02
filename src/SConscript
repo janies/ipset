@@ -11,10 +11,12 @@ libipset_files = \
      "map/inspection.c",
      "map/ipv4_map.c",
      "map/ipv6_map.c",
+     "map/storage.c",
      "set/allocation.c",
      "set/inspection.c",
      "set/ipv4_set.c",
      "set/ipv6_set.c",
+     "set/storage.c",
     ]
 
 libipset = env.SharedLibrary("ipset", libipset_files)
