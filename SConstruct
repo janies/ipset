@@ -13,7 +13,8 @@ vars.AddVariables(
     )
 
 
-root_env = Environment(BINDIR = "$prefix/bin",
+root_env = Environment(tools=['default', 'scanreplace'],
+                       BINDIR = "$prefix/bin",
                        LIBDIR = "$prefix/lib",
                        INCLUDEDIR = "$prefix/include")
 
@@ -72,3 +73,7 @@ SConscript([
             'src/SConscript',
             'tests/SConscript',
            ])
+
+pc_file = root_env.ScanReplace('ipset.pc.in')
+Default(pc_file)
+root_env.Alias("install", root_env.Install("$LIBDIR/pkgconfig", pc_file))

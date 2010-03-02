@@ -1,0 +1,6 @@
+Name: ipset
+Description: Library for storing IP sets and maps
+Version: 0.1
+URL: http://github.com/dcreager/ipset/
+Libs: -L${prefix}/lib -lipset
+Cflags: -I${prefix}/include -I${prefix}/include/cudd

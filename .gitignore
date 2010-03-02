@@ -4,6 +4,8 @@
 config.log
 utiltmp
 
+ipset.pc
+
 *.[oa]
 *.os
 *.so
