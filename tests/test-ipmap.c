@@ -397,7 +397,11 @@ START_TEST(test_ipv4_memory_size_1)
     ipmap_init(&map, 0);
     ipmap_ipv4_set(&map, &IPV4_ADDR_1, 1);
 
+#if SIZE_MAX == UINT32_MAX
+    expected = 544;
+#else
     expected = 1088;
+#endif
     actual = ipmap_memory_size(&map);
 
     fail_unless(expected == actual,
@@ -416,7 +420,11 @@ START_TEST(test_ipv4_memory_size_2)
     ipmap_init(&map, 0);
     ipmap_ipv4_set_network(&map, &IPV4_ADDR_1, 24, 1);
 
+#if SIZE_MAX == UINT32_MAX
+    expected = 416;
+#else
     expected = 832;
+#endif
     actual = ipmap_memory_size(&map);
 
     fail_unless(expected == actual,
@@ -638,7 +646,11 @@ START_TEST(test_ipv6_memory_size_1)
     ipmap_init(&map, 0);
     ipmap_ipv6_set(&map, &IPV6_ADDR_1, 1);
 
+#if SIZE_MAX == UINT32_MAX
+    expected = 2080;
+#else
     expected = 4160;
+#endif
     actual = ipmap_memory_size(&map);
 
     fail_unless(expected == actual,
@@ -657,7 +669,11 @@ START_TEST(test_ipv6_memory_size_2)
     ipmap_init(&map, 0);
     ipmap_ipv6_set_network(&map, &IPV6_ADDR_1, 32, 1);
 
+#if SIZE_MAX == UINT32_MAX
+    expected = 544;
+#else
     expected = 1088;
+#endif
     actual = ipmap_memory_size(&map);
 
     fail_unless(expected == actual,
