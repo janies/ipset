@@ -23,7 +23,7 @@ ipset_save(ip_set_t *set, FILE *file)
     return
         Dddmp_cuddBddStore(ipset_manager, NULL, set->set_bdd,
                            NULL, NULL,
-                           DDDMP_MODE_BINARY,
+                           DDDMP_MODE_TEXT,
                            DDDMP_VARIDS,
                            NULL, file);
 }
@@ -42,7 +42,7 @@ ipset_load(FILE *file)
         Dddmp_cuddBddLoad(ipset_manager,
                           DDDMP_VAR_MATCHIDS,
                           NULL, NULL, NULL,
-                          DDDMP_MODE_BINARY,
+                          DDDMP_MODE_TEXT,
                           NULL, file);
 
     if (node == NULL)
