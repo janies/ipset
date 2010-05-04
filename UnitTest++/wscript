@@ -1,0 +1,63 @@
+# -*- coding: utf-8 -*-
+# ----------------------------------------------------------------------
+# Copyright © 2010, RedJack, LLC.
+# All rights reserved.
+#
+# NOTE: This file is not part of the original UnitTest++ distribution.
+#
+# Please see the LICENSE.txt file in this distribution for license
+# details.
+# ----------------------------------------------------------------------
+
+
+def set_options(opt):
+    opt.tool_options("compiler_cxx")
+
+
+def configure(conf):
+    conf.check_tool("compiler_cxx")
+
+
+UnitTest_sources = [
+    "src/AssertException.cpp",
+    "src/Test.cpp",
+    "src/Checks.cpp",
+    "src/TestRunner.cpp",
+    "src/TestResults.cpp",
+    "src/TestReporter.cpp",
+    "src/TestReporterStdout.cpp",
+    "src/ReportAssert.cpp",
+    "src/TestList.cpp",
+    "src/TimeConstraint.cpp",
+    "src/TestDetails.cpp",
+    "src/MemoryOutStream.cpp",
+    "src/DeferredTestReporter.cpp",
+    "src/DeferredTestResult.cpp",
+    "src/XmlTestReporter.cpp",
+    "src/CurrentTest.cpp",
+]
+
+# TODO: Add src/Win32/TimeHelpers.cpp on MINGW32.
+
+# TODO: Only add the following on POSIX.
+
+UnitTest_sources.extend(
+    [
+     "src/Posix/SignalTranslator.cpp",
+     "src/Posix/TimeHelpers.cpp",
+    ])
+
+
+def build(bld):
+    sources = [
+        bld.path.ant_glob("src/*.cpp"),
+        bld.path.ant_glob("src/Posix/*.cpp"),
+    ]
+
+    bld(
+        features = "cxx cstaticlib",
+        source = " ".join(sources),
+        target = "UnitTest",
+        name = "UnitTest",
+        install_path = None,
+    )

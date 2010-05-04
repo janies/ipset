@@ -16,6 +16,7 @@ APPNAME = "PLEASE_DEFINE_APPNAME"
 VERSION = get_git_version("RELEASE-VERSION")
 
 SUBDIRS = [
+    "UnitTest++",
     "include",
     "src",
     "tests",

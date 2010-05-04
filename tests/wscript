@@ -22,8 +22,10 @@ def build(bld):
             features = "cxx cprogram",
             source = "%s.cc" % test_name,
             target = test_name,
+            uselib_local = "UnitTest",
             install_path = None,
             includes = [
+                "../UnitTest++/src",
                 "../include",
             ],
             rpath = [
