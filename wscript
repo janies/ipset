@@ -109,9 +109,13 @@ def build(bld):
 
 def test(tst):
     import Scripting
-    SUBDIRS.append("tests")
     Scripting.commands.insert(0, "run_tests")
     Scripting.commands.insert(0, "build")
+    Scripting.commands.insert(0, "add_test_dirs")
+
+
+def add_test_dirs(tst):
+    SUBDIRS.append("tests")
 
 
 def run_tests(tst):
@@ -124,5 +128,5 @@ def run_tests(tst):
 
 def build_tests(tst):
     import Scripting
-    SUBDIRS.append("tests")
     Scripting.commands.insert(0, "build")
+    Scripting.commands.insert(0, "add_test_dirs")
