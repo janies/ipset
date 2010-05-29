@@ -4,7 +4,6 @@
 /build/
 
 RELEASE-VERSION
-ipset.pc
 
 /ipset*.tar.gz
 /ipset*.tar.bz2

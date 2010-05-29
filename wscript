@@ -12,7 +12,7 @@ from version import *
 #--------------------------
 # Edit the variables below
 
-APPNAME = "PLEASE_DEFINE_APPNAME"
+APPNAME = "ipset"
 VERSION = get_git_version("RELEASE-VERSION")
 
 SUBDIRS = [
