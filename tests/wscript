@@ -22,7 +22,8 @@ def build(bld):
             features = "cxx cprogram",
             source = "%s.cc" % test_name,
             target = test_name,
-            uselib_local = "UnitTest",
+            uselib = "GLOG",
+            uselib_local = "UnitTest ipset",
             install_path = None,
             includes = [
                 "../UnitTest++/src",
@@ -34,3 +35,7 @@ def build(bld):
         )
 
         test.unit_test = True
+
+    make_test("test-endianness")
+    make_test("test-ip")
+    make_test("test-utils")

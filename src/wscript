@@ -11,11 +11,15 @@
 def set_options(opt):
     opt.tool_options("compiler_cxx")
     opt.tool_options("misc")
+    opt.tool_options("boost")
 
 
 def configure(conf):
     conf.check_tool("compiler_cxx")
     conf.check_tool("misc")
+    conf.check_tool("boost")
+
+    conf.check_boost()
 
     conf.check_cfg(atleast_pkgconfig_version="0.15.0")
     conf.check_cfg(
@@ -29,6 +33,16 @@ def configure(conf):
 
 
 def build(bld):
+    bld(
+        features="cxx cshlib",
+        source = bld.path.ant_glob("libipset/**/*.cc"),
+        includes = ["../include"],
+        target = "ipset",
+        uselib = "GLOG",
+        vnum = "0.0.0",
+        export_incdirs = ["../include"],
+    )
+
     import Utils
 
     bld(
