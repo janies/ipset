@@ -1,0 +1,32 @@
+import os
+
+Import('root_env', 'libipset')
+
+env = root_env.Clone()
+
+env.Prepend(CPPPATH=["#/include"],
+            LIBPATH=["#/src"],
+            LIBS=[libipset])
+
+
+# Give each test program an RPATH, so that it can find the ipset
+# library while they're still in the source tree.
+
+rpath = [env.Literal(os.path.join('\\$$ORIGIN', os.pardir, 'src'))]
+
+
+def add_example(example_program):
+    c_file = "%s.c" % example_program
+
+    target = env.Program(example_program, [c_file],
+                         RPATH=rpath)
+    env.Alias("build-examples", target)
+
+
+add_example("ipv4-set-size")
+
+
+# Don't build the examples by default; but clean them by default.
+
+if GetOption('clean'):
+    env.Default("build-examples")

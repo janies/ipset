@@ -11,7 +11,7 @@ except ImportError:
     print "We need the setuptools-git package to be installed for"
     print "some of the setup.py targets to work correctly."
 
-PACKAGE = 'ipset'
+PACKAGE = 'python-ipset'
 VERSION = get_git_version()
 
 setup(

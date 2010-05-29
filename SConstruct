@@ -72,6 +72,7 @@ SConscript([
             'include/SConscript',
             'src/SConscript',
             'tests/SConscript',
+            'examples/SConscript',
            ])
 
 pc_file = root_env.ScanReplace('ipset.pc.in')
