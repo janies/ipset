@@ -1,13 +1,15 @@
-.sconf_temp/
-.sconsign.dblite
-.scons.vars*
-config.log
-utiltmp
+/.lock-wscript
+/.waf*/
+/*.py[co]
+/build/
 
+RELEASE-VERSION
 ipset.pc
+
+/ipset*.tar.gz
+/ipset*.tar.bz2
 
 *.[oa]
 *.os
 *.so
 *.dylib
-*.py[co]
