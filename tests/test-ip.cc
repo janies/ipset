@@ -9,10 +9,11 @@
  */
 
 
+#define __STDC_CONSTANT_MACROS
+
 #include <iostream>
 #include <sstream>
 
-#define __STDC_CONSTANT_MACROS
 #include <boost/cstdint.hpp>
 
 // Both of the following try to define CHECK.  We want the one from
