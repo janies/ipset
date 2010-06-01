@@ -124,6 +124,12 @@ public:
 
     node_t nonterminal(variable_t variable, node_t low, node_t high)
     {
+        // Don't allow any nonterminals whose low and high subtrees
+        // are the same, since the nonterminal would be redundant.
+
+        if (low == high)
+            return low;
+
         return _nonterminals(boost::make_tuple(variable, low, high));
     }
 };

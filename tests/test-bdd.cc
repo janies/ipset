@@ -153,6 +153,24 @@ TEST(BDD_Nonterminal_Reduced_1)
 }
 
 
+TEST(BDD_Nonterminal_Reduced_2)
+{
+    std::cerr << "Starting BDD_Nonterminal_Reduced_2 test case." << std::endl;
+
+    // We shouldn't have a nonterminal whose low and high subtrees are
+    // equal.
+
+    engine_t<bool>  engine;
+
+    types<bool>::node  n_false = engine.terminal(false);
+
+    types<bool>::node  node =
+        engine.nonterminal(0, n_false, n_false);
+
+    CHECK_EQUAL(node, n_false);
+}
+
+
 //--------------------------------------------------------------------
 // Boilerplate
 
