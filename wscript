@@ -19,7 +19,6 @@ SUBDIRS = [
     "UnitTest++",
     "include",
     "src",
-    "tests",
 ]
 
 # The tests subdirectory is only included if the user runs "waf test"
