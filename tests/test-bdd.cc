@@ -21,7 +21,8 @@
 #undef CHECK
 #include <UnitTest++.h>
 
-#include <ip/bdd.hh>
+#include <ip/bdd/engine.hh>
+#include <ip/bdd/nodes.hh>
 
 using namespace ip::bdd;
 
@@ -33,9 +34,9 @@ TEST(BDD_False_Terminal)
 {
     std::cerr << "Starting BDD_False_Terminal test case." << std::endl;
 
-    node_cache_t<bool>  cache;
+    engine_t<bool>  engine;
 
-    types<bool>::node  n_false = cache.terminal(false);
+    types<bool>::node  n_false = engine.terminal(false);
     types<bool>::terminal  t_false = n_false.as_terminal();
 
     CHECK_EQUAL(false, t_false->value());
@@ -46,9 +47,9 @@ TEST(BDD_True_Terminal)
 {
     std::cerr << "Starting BDD_True_Terminal test case." << std::endl;
 
-    node_cache_t<bool>  cache;
+    engine_t<bool>  engine;
 
-    types<bool>::node  n_true = cache.terminal(true);
+    types<bool>::node  n_true = engine.terminal(true);
     types<bool>::terminal  t_true = n_true.as_terminal();
 
     CHECK_EQUAL(true, t_true->value());
@@ -74,14 +75,14 @@ TEST(BDD_Terminal_Reduced_1)
 {
     std::cerr << "Starting BDD_Terminal_Reduced_1 test case." << std::endl;
 
-    // If we create terminals via a cache, they will be reduced —
+    // If we create terminals via a BDD engine, they will be reduced —
     // i.e., every terminal with the same value will be in the same
     // memory location.
 
-    node_cache_t<bool>  cache;
+    engine_t<bool>  engine;
 
-    types<bool>::node  node1 = cache.terminal(false);
-    types<bool>::node  node2 = cache.terminal(false);
+    types<bool>::node  node1 = engine.terminal(false);
+    types<bool>::node  node2 = engine.terminal(false);
 
     CHECK_EQUAL(node1, node2);
 }
@@ -94,13 +95,13 @@ TEST(BDD_Nonterminal_1)
 {
     std::cerr << "Starting BDD_Nonterminal_1 test case." << std::endl;
 
-    node_cache_t<bool>  cache;
+    engine_t<bool>  engine;
 
-    types<bool>::node  n_false = cache.terminal(false);
-    types<bool>::node  n_true = cache.terminal(true);
+    types<bool>::node  n_false = engine.terminal(false);
+    types<bool>::node  n_true = engine.terminal(true);
 
     types<bool>::node  node =
-        cache.nonterminal(0, n_false, n_true);
+        engine.nonterminal(0, n_false, n_true);
     types<bool>::nonterminal  nonterminal =
         node.as_nonterminal();
 
@@ -134,19 +135,19 @@ TEST(BDD_Nonterminal_Reduced_1)
 {
     std::cerr << "Starting BDD_Nonterminal_Reduced_1 test case." << std::endl;
 
-    // If we create nonterminals via a cache, they will be reduced —
-    // i.e., every nonterminal with the same value will be in the same
-    // memory location.
+    // If we create nonterminals via a BDD engine, they will be
+    // reduced — i.e., every nonterminal with the same value will be
+    // in the same memory location.
 
-    node_cache_t<bool>  cache;
+    engine_t<bool>  engine;
 
-    types<bool>::node  n_false = cache.terminal(false);
-    types<bool>::node  n_true = cache.terminal(true);
+    types<bool>::node  n_false = engine.terminal(false);
+    types<bool>::node  n_true = engine.terminal(true);
 
     types<bool>::node  node1 =
-        cache.nonterminal(0, n_false, n_true);
+        engine.nonterminal(0, n_false, n_true);
     types<bool>::node  node2 =
-        cache.nonterminal(0, n_false, n_true);
+        engine.nonterminal(0, n_false, n_true);
 
     CHECK_EQUAL(node1, node2);
 }

@@ -8,8 +8,8 @@
  * ----------------------------------------------------------------------
  */
 
-#ifndef IP__BDD_HH
-#define IP__BDD_HH
+#ifndef IP__BDD_NODES_HH
+#define IP__BDD_NODES_HH
 
 
 /**
@@ -19,11 +19,9 @@
  * sets.
  */
 
-#include <map>
+#include <iostream>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
 #include <boost/variant.hpp>
 
 
@@ -434,135 +432,7 @@ operator << (std::ostream &stream, const node_t<Value> &node)
 }
 
 
-/**
- * A node cache.  This class is responsible for ensuring that BDD
- * nodes are reduced — that is, that we only ever instantiate one
- * terminal or nonterminal with a particular value.
- */
-
-template <typename Value>
-class node_cache_t
-{
-private:
-    // Shorthand typedefs
-
-    typedef typename types<Value>::terminal  terminal_p;
-    typedef typename types<Value>::nonterminal  nonterminal_p;
-    typedef typename types<Value>::node  node_t;
-
-    /**
-     * The type of the terminal cache.  Terminals are instantiated
-     * with the contained value, which is the key of the cache.  The
-     * value of the cache is a shared pointer to a terminal_t object.
-     */
-
-    typedef std::map<Value, terminal_p>
-    terminal_map_t;
-
-    /**
-     * The type of the nonterminal map's key.  Nonterminals are
-     * constructed from three values: the variable, the low subtree,
-     * and the high subtree.  The key of the nonterminal cache is a
-     * tuple of these three values.
-     */
-
-    typedef boost::tuple<variable_t, node_t, node_t>
-    nonterminal_key_t;
-
-    /**
-     * The type of the nonterminal cache.  The key of the cache is the
-     * nonterminal_key_t type.  The value of the cache is a shared
-     * pointer to a nonterminal_t object.
-     */
-
-    typedef std::map<nonterminal_key_t, nonterminal_p>
-    nonterminal_map_t;
-
-    /**
-     * The cache of terminal nodes.
-     */
-
-    terminal_map_t  terminal_map;
-
-    /**
-     * The cache of nonterminal nodes.
-     */
-
-    nonterminal_map_t  nonterminal_map;
-
-public:
-    /**
-     * Create a new, empty node cache.
-     */
-
-    node_cache_t()
-    {
-    }
-
-    /**
-     * Create or retrieve the terminal for the specified value.  If
-     * the cache already contains the corresponding terminal, the
-     * existing instance will be returned; otherwise, we create and
-     * return a new instance.
-     */
-
-    node_t terminal(Value value)
-    {
-        typename terminal_map_t::iterator  lb =
-            terminal_map.lower_bound(value);
-
-        if ((lb != terminal_map.end()) && (value == lb->first))
-        {
-            return lb->second;
-        } else {
-            terminal_p  terminal(new terminal_t<Value>(value));
-
-            terminal_map.insert
-                (lb, typename terminal_map_t::value_type
-                 (value, terminal));
-
-            return terminal;
-        }
-    }
-
-    /**
-     * Create or retrieve the nonterminal for the specified values.
-     * If the cache already contains the corresponding terminal, the
-     * existing instance will be returned; otherwise, we create and
-     * return a new instance.
-     */
-
-    node_t nonterminal(variable_t variable,
-                       node_t low,
-                       node_t high)
-    {
-        if (low == high)
-            return low;
-
-        nonterminal_key_t  key =
-            boost::make_tuple(variable, low, high);
-
-        typename nonterminal_map_t::iterator  lb =
-            nonterminal_map.lower_bound(key);
-
-        if ((lb != nonterminal_map.end()) && (key == lb->first))
-        {
-            return lb->second;
-        } else {
-            nonterminal_p  nonterminal
-                (new nonterminal_t<Value>(variable, low, high));
-
-            nonterminal_map.insert
-                (lb, typename nonterminal_map_t::value_type
-                 (key, nonterminal));
-
-            return nonterminal;
-        }
-    }
-};
-
-
 } // namespace bdd
 } // namespace ip
 
-#endif /* IP__BDD_HH */
+#endif /* IP__BDD_NODES_HH */
