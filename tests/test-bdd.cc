@@ -12,9 +12,6 @@
 #include <iostream>
 #include <sstream>
 
-#define __STDC_CONSTANT_MACROS
-#include <boost/cstdint.hpp>
-
 // Both of the following try to define CHECK.  We want the one from
 // UnitTest.
 #include <glog/logging.h>
@@ -168,6 +165,62 @@ TEST(BDD_Nonterminal_Reduced_2)
         engine.nonterminal(0, n_false, n_false);
 
     CHECK_EQUAL(node, n_false);
+}
+
+
+//--------------------------------------------------------------------
+// Evaluation
+
+TEST(BDD_Evaluate_1)
+{
+    std::cerr << "Starting BDD_Evaluate_1 test case." << std::endl;
+
+    // Create a BDD representing
+    //   f(x) = ¬x[0]
+
+    engine_t<bool>  engine;
+
+    types<bool>::node  n_false = engine.terminal(false);
+    types<bool>::node  n_true = engine.terminal(true);
+
+    types<bool>::node  node = engine.nonterminal(0, n_true, n_false);
+
+    // And test we can get the right results out of it.
+
+    bool  input1[] = { true };
+    bool  input2[] = { false };
+
+    CHECK_EQUAL(false, node.evaluate(input1));
+    CHECK_EQUAL(true, node.evaluate(input2));
+}
+
+
+TEST(BDD_Evaluate_2)
+{
+    std::cerr << "Starting BDD_Evaluate_2 test case." << std::endl;
+
+    // Create a BDD representing
+    //   f(x) = ¬x[0] ∧ x[1]
+
+    engine_t<bool>  engine;
+
+    types<bool>::node  n_false = engine.terminal(false);
+    types<bool>::node  n_true = engine.terminal(true);
+
+    types<bool>::node  node1 = engine.nonterminal(1, n_false, n_true);
+    types<bool>::node  node = engine.nonterminal(0, node1, n_false);
+
+    // And test we can get the right results out of it.
+
+    bool  input1[] = { true, true };
+    bool  input2[] = { true, false };
+    bool  input3[] = { false, true };
+    bool  input4[] = { false, false };
+
+    CHECK_EQUAL(false, node.evaluate(input1));
+    CHECK_EQUAL(false, node.evaluate(input2));
+    CHECK_EQUAL(true, node.evaluate(input3));
+    CHECK_EQUAL(false, node.evaluate(input4));
 }
 
 

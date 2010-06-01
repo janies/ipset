@@ -143,6 +143,22 @@ public:
     {
         return _value < other._value;
     }
+
+    /**
+     * Evaluate a BDD given a particular variable assignment.  The
+     * variable assignment should a vector-like class whose elements
+     * can be cast to bools.  It should contain enough elements for
+     * all of the variables in the BDD tree.
+     */
+
+    template <typename Assignment>
+    Value evaluate(const Assignment &variables) const
+    {
+        // For a terminal node, we've reached the evaluation result,
+        // so we can just return it.
+
+        return _value;
+    }
 };
 
 
@@ -272,23 +288,27 @@ public:
     }
 
     /**
-     * Apply a Boost Variant visitor to the low subtree of this node.
+     * Evaluate a BDD given a particular variable assignment.  The
+     * variable assignment should a vector-like class whose elements
+     * can be cast to bools.  It should contain enough elements for
+     * all of the variables in the BDD tree.
      */
 
-    template <typename Visitor>
-    typename Visitor::result_type apply_low(Visitor &visitor)
+    template <typename Assignment>
+    Value evaluate(const Assignment &variables) const
     {
-        return boost::apply_visitor(visitor, _low);
-    }
+        if (variables[_variable])
+        {
+            // This node's variable is true in the assignment vector,
+            // so trace down the high subtree.
 
-    /**
-     * Apply a Boost Variant visitor to the high subtree of this node.
-     */
+            return _high.evaluate(variables);
+        } else {
+            // This node's variable is false in the assignment vector,
+            // so trace down the low subtree.
 
-    template <typename Visitor>
-    typename Visitor::result_type apply_high(Visitor &visitor)
-    {
-        return boost::apply_visitor(visitor, _high);
+            return _low.evaluate(variables);
+        }
     }
 };
 
@@ -419,6 +439,43 @@ public:
     variant_t variant() const
     {
         return _variant;
+    }
+
+private:
+    /**
+     * A variant visitor for the evaluate() method.
+     */
+
+    template <typename Assignment>
+    struct evaluate_visitor: public boost::static_visitor<Value>
+    {
+        const Assignment  &_variables;
+
+        evaluate_visitor(const Assignment &variables_):
+            _variables(variables_)
+        {
+        }
+
+        template <typename T>
+        Value operator () (const T &node) const
+        {
+            return node->evaluate(_variables);
+        }
+    };
+
+public:
+    /**
+     * Evaluate a BDD given a particular variable assignment.  The
+     * variable assignment should a vector-like class whose elements
+     * can be cast to bools.  It should contain enough elements for
+     * all of the variables in the BDD tree.
+     */
+
+    template <typename Assignment>
+    Value evaluate(const Assignment &variables) const
+    {
+        return boost::apply_visitor
+            (evaluate_visitor<Assignment>(variables), _variant);
     }
 };
 
