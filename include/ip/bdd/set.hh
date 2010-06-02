@@ -36,11 +36,13 @@ private:
     typedef types<bool>::nonterminal  nonterminal_p;
     typedef types<bool>::node  node_t;
 
-    and_operator<bool>  _and;
+    binary_operator<bool, std::logical_and<bool> >  _and;
+    binary_operator<bool, std::logical_or<bool> >  _or;
 
 public:
     bool_engine_t():
-        _and(this)
+        _and(this),
+        _or(this)
     {
     }
 
@@ -51,6 +53,15 @@ public:
     node_t apply_and(const node_t &lhs, const node_t &rhs)
     {
         return _and(lhs, rhs);
+    }
+
+    /**
+     * Calculate the logical or (∨) of two BDDs.
+     */
+
+    node_t apply_or(const node_t &lhs, const node_t &rhs)
+    {
+        return _or(lhs, rhs);
     }
 };
 

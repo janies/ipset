@@ -24,21 +24,20 @@ namespace bdd {
 
 
 /**
- * An operator function that constructs the logical and (∧) of two
- * BDDs.  We need a reference to the engine that caches the nodes, so
+ * A function that applies a binary operator to two BDDs.  The
+ * operator itself is used on the terminal nodes; we use the standard
+ * recursive APPLY function to apply the operator to nonterminal
+ * nodes.  We need a reference to the engine that caches the nodes, so
  * that the BDDs that we produce are reduced.  We also ensure that the
  * BDDs are ordered, assuming that the input BDDs are also ordered.
  * Finally, this is a cached function, so we won't needlessly repeat
  * work that we've already calculated.
- *
- * This operator function assumes that we can apply the standard &&
- * operator to the Value type.
  */
 
-template <typename Value>
-struct and_operator:
+template <typename Value, typename Operator>
+struct binary_operator:
         public cached_binary_function_t
-            <and_operator<Value>,
+            <binary_operator<Value, Operator>,
              typename types<Value>::node,
              typename types<Value>::node,
              typename types<Value>::node>
@@ -63,6 +62,13 @@ private:
      */
 
     engine_t<Value>  *engine;
+
+    /**
+     * The operator function that will be applied to the terminal
+     * values.
+     */
+
+    Operator  op;
 
     /**
      * Apply the operator recursively to the subtrees of the current
@@ -96,7 +102,7 @@ private:
     }
 
 public:
-    explicit and_operator(engine_t<Value> *engine_):
+    explicit binary_operator(engine_t<Value> *engine_):
         engine(engine_)
     {
     }
@@ -111,7 +117,7 @@ public:
     operator () (const terminal_p &lhs,
                  const terminal_p &rhs)
     {
-        return engine->terminal(lhs->value() && rhs->value());
+        return engine->terminal(op(lhs->value(), rhs->value()));
     }
 
     /**
