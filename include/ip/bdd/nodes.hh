@@ -106,7 +106,7 @@ public:
      * live at different memory locations, and won't be reduced.
      */
 
-    explicit terminal_t(Value value_):
+    explicit terminal_t(const Value &value_):
         _value(value_)
     {
     }
@@ -115,7 +115,8 @@ public:
      * Return the value contained by this terminal node.
      */
 
-    Value value() const
+    const Value &
+    value() const
     {
         return _value;
     }
@@ -215,8 +216,8 @@ public:
      */
 
     nonterminal_t(variable_t variable_,
-                  node_t low_,
-                  node_t high_):
+                  const node_t &low_,
+                  const node_t &high_):
         _variable(variable_),
         _low(low_),
         _high(high_)
@@ -236,7 +237,8 @@ public:
      * Return the subtree node for when the variable is false.
      */
 
-    node_t low() const
+    const node_t &
+    low() const
     {
         return _low;
     }
@@ -245,7 +247,8 @@ public:
      * Return the subtree node for when the variable is true.
      */
 
-    node_t high() const
+    const node_t &
+    high() const
     {
         return _high;
     }
@@ -436,7 +439,8 @@ public:
      * Return the Boost Variant instance for this node.
      */
 
-    variant_t variant() const
+    const variant_t &
+    variant() const
     {
         return _variant;
     }

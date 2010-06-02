@@ -118,7 +118,9 @@ public:
      * physical node each time.
      */
 
-    node_t nonterminal(variable_t variable, node_t low, node_t high)
+    node_t nonterminal(variable_t variable,
+                       const node_t &low,
+                       const node_t &high)
     {
         // Don't allow any nonterminals whose low and high subtrees
         // are the same, since the nonterminal would be redundant.
