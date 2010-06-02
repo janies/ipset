@@ -48,21 +48,15 @@ private:
      */
 
     struct terminal_creator:
-        public std::unary_function<Value, terminal_p>
+        cached_unary_function_t<terminal_creator,
+                                Value, terminal_p>
     {
         terminal_p
-        operator () (const Value &value) const
+        call(const Value &value) const
         {
             return terminal_p(new terminal_t<Value>(value));
         }
     };
-
-    /**
-     * A tuple type for the input to the nonterminal_t constructor.
-     */
-
-    typedef boost::tuple<variable_t, node_t, node_t>
-    nonterminal_key_t;
 
     /**
      * A function object that creates a nonterminal instance.  This
@@ -70,15 +64,17 @@ private:
      */
 
     struct nonterminal_creator:
-        public std::unary_function<nonterminal_key_t, nonterminal_p>
+        cached_ternary_function_t<nonterminal_creator,
+                                  variable_t, node_t, node_t,
+                                  nonterminal_p>
     {
         nonterminal_p
-        operator () (const nonterminal_key_t &key) const
+        call(const variable_t variable,
+             const node_t &low,
+             const node_t &high) const
         {
             return nonterminal_p(new nonterminal_t<Value>
-                                 (boost::get<0>(key),
-                                  boost::get<1>(key),
-                                  boost::get<2>(key)));
+                                 (variable, low, high));
         }
     };
 
@@ -86,13 +82,13 @@ private:
      * The cached function for creating terminal nodes.
      */
 
-    cached_function_t<terminal_creator>  _terminals;
+    terminal_creator  _terminals;
 
     /**
      * The cached function for creating nonterminal nodes.
      */
 
-    cached_function_t<nonterminal_creator>  _nonterminals;
+    nonterminal_creator  _nonterminals;
 
 public:
     /**
@@ -130,7 +126,7 @@ public:
         if (low == high)
             return low;
 
-        return _nonterminals(boost::make_tuple(variable, low, high));
+        return _nonterminals(variable, low, high);
     }
 };
 
