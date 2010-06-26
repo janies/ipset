@@ -16,8 +16,8 @@
 
 #include <boost/tuple/tuple.hpp>
 
-#include <ip/bdd/cache.hh>
 #include <ip/bdd/nodes.hh>
+#include <ip/bdd/operators.hh>
 
 
 namespace ip {
@@ -25,110 +25,110 @@ namespace bdd {
 
 
 /**
- * An “engine” for handling BDDs that map to a particular value type.
- * This includes all of the necessary caches for the various BDD
- * functions and operators.  Any BDD created using the same engine
- * instance will share nodes, which can be a big memory saver in some
- * use cases.
+ * An “engine” for handling BDD nodes with Boolean terminals.  This
+ * includes all of the necessary caches for the various BDD functions
+ * and operators.  Any BDD created using the same engine instance will
+ * share nodes, which can be a big memory saver in some use cases.
  */
 
-template <typename Value>
-class engine_t
+class bool_engine_t
 {
 private:
-    // Shorthand typedefs
-
-    typedef typename types<Value>::terminal  terminal_p;
-    typedef typename types<Value>::nonterminal  nonterminal_p;
-    typedef typename types<Value>::node  node_t;
-
     /**
-     * A function object that creates a terminal instance.  This will
-     * be cached to ensure that the BDD nodes are reduced.
+     * A cache of the BDD nodes.
      */
 
-    struct terminal_creator:
-        cached_unary_function_t<terminal_creator,
-                                Value, terminal_p>
-    {
-        terminal_p
-        call(const Value &value) const
-        {
-            return terminal_p(new terminal_t<Value>(value));
-        }
-    };
+    node_cache_t  _cache;
 
-    /**
-     * A function object that creates a nonterminal instance.  This
-     * will be cached to ensure that the BDD nodes are reduced.
-     */
+    // Cached binary operators
 
-    struct nonterminal_creator:
-        cached_ternary_function_t<nonterminal_creator,
-                                  variable_t, node_t, node_t,
-                                  nonterminal_p>
-    {
-        nonterminal_p
-        call(const variable_t variable,
-             const node_t &low,
-             const node_t &high) const
-        {
-            return nonterminal_p(new nonterminal_t<Value>
-                                 (variable, low, high));
-        }
-    };
-
-    /**
-     * The cached function for creating terminal nodes.
-     */
-
-    terminal_creator  _terminals;
-
-    /**
-     * The cached function for creating nonterminal nodes.
-     */
-
-    nonterminal_creator  _nonterminals;
+    binary_operator<std::logical_and<bool> >  _and;
+    binary_operator<std::logical_or<bool> >  _or;
 
 public:
     /**
-     * Create a new BDD engine.
+     * Create a new, empty node cache.
      */
 
-    engine_t()
+    bool_engine_t():
+        _cache(),
+        _and(_cache),
+        _or(_cache)
     {
     }
 
     /**
-     * Create or retrieve the terminal for the specified value.  We
-     * ensure that the nodes are reduced; if you call this function
-     * with the same values more than once, you'll get the same
-     * physical node each time.
+     * Return the index of the corresponding nonterminal node,
+     * creating it if necessary.
      */
 
-    node_t terminal(Value value)
+    node_id_t
+    nonterminal(variable_t variable, node_id_t low, node_id_t high)
     {
-        return _terminals(value);
+        return _cache.nonterminal(variable, low, high);
     }
 
     /**
-     * Create or retrieve the nonterminal for the specified value.  We
-     * ensure that the nodes are reduced; if you call this function
-     * with the same values more than once, you'll get the same
-     * physical node each time.
+     * Return a reference to the nonterminal node with the given ID.
+     * The result is undefined if you pass in a terminal ID.
      */
 
-    node_t nonterminal(variable_t variable,
-                       const node_t &low,
-                       const node_t &high)
+    const node_t &
+    node(node_id_t id)
     {
-        // Don't allow any nonterminals whose low and high subtrees
-        // are the same, since the nonterminal would be redundant.
+        return _cache.node(id);
+    }
 
-        if (low == high)
-            return low;
+    /**
+     * Evaluate a BDD given a particular variable assignment.  The
+     * variable assignment should a vector-like class whose elements
+     * can be cast to bools.  It should contain enough elements for
+     * all of the variables in the BDD tree.
+     */
 
-        return _nonterminals(variable, low, high);
+    template <typename Assignment>
+    range_t evaluate(node_id_t node_id,
+                     const Assignment &variables) const
+    {
+        return _cache.evaluate(node_id, variables);
+    }
+
+    /**
+     * Return the terminal node for the false value.
+     */
+
+    node_id_t false_node() const
+    {
+        return _cache.terminal(false);
+    }
+
+    /**
+     * Return the terminal node for the true value.
+     */
+
+    node_id_t true_node() const
+    {
+        return _cache.terminal(true);
+    }
+
+    /**
+     * Calculate the logical and (∧) of two BDDs.
+     */
+
+    node_id_t
+    apply_and(node_id_t lhs, node_id_t rhs)
+    {
+        return _and(lhs, rhs);
+    }
+
+    /**
+     * Calculate the logical or (∨) of two BDDs.
+     */
+
+    node_id_t
+    apply_or(node_id_t lhs, node_id_t rhs)
+    {
+        return _or(lhs, rhs);
     }
 };
 

@@ -19,14 +19,22 @@
  * sets.
  */
 
-#include <iostream>
+#include <map>
+#include <ostream>
+#include <vector>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/variant.hpp>
+#include <boost/tuple/tuple.hpp>
+
+#include <ip/bdd/cache.hh>
 
 
 namespace ip {
 namespace bdd {
+
+
+// Forward declarations
+
+class node_cache_t;
 
 
 /**
@@ -36,136 +44,24 @@ namespace bdd {
 typedef unsigned int  variable_t;
 
 
-// Forward declare our classes.
-
-template <typename Value> class terminal_t;
-template <typename Value> class nonterminal_t;
-template <typename Value> class node_t;
-
-
 /**
- * Provides more convenient access to the BDD node types for a
- * particular terminal value type.  We use shared pointers to refer to
- * nodes, since they will (in most cases) be “reduced” — we will
- * ensure that two nodes with the same value will always live at the
- * same memory location.
+ * Each BDD terminal represents an integer value.
  */
 
-template <typename Value>
-struct types
-{
-    /**
-     * A shared pointer to a terminal node.
-     */
-
-    typedef boost::shared_ptr<terminal_t<Value> >  terminal;
-
-    /**
-     * A shared pointer to a nonterminal node.
-     */
-
-    typedef boost::shared_ptr<nonterminal_t<Value> >  nonterminal;
-
-    /**
-     * A shared pointer to a node which might be terminal or
-     * nonterminal.
-     */
-
-    typedef node_t<Value>  node;
-};
+typedef int  range_t;
 
 
 /**
- * A terminal node.  This is a leaf of the BDD tree.  BDDs map
- * variable assignments to values.  Each variable in the assignment is
- * boolean; the value is user-specified.
- *
- * This class does not take care of ensuring that all BDD nodes are
- * reduced; that is handled by the node_cache_t class.
+ * An identifier for each distinct node in a BDD.  Negative values
+ * represent non-terminals, non-negative values represent terminals.
  */
 
-template <typename Value>
-class terminal_t
-{
-private:
-    /**
-     * The value contained by this terminal node.
-     */
-
-    Value  _value;
-
-public:
-    /**
-     * Create a new terminal node containing the given value.  Most
-     * user code should not create terminal_t objects by hand;
-     * instead, they should use the node_cache_t class.
-     *
-     * Note that we do not ensure that terminal nodes are reduced:
-     * it's perfectly valid to instantiate two terminal_t objects by
-     * hand with the same value.  If you do so, those two objects will
-     * live at different memory locations, and won't be reduced.
-     */
-
-    explicit terminal_t(const Value &value_):
-        _value(value_)
-    {
-    }
-
-    /**
-     * Return the value contained by this terminal node.
-     */
-
-    const Value &
-    value() const
-    {
-        return _value;
-    }
-
-    /**
-     * Test two terminals for equality.  Note that this operator is
-     * usually not the one that will be used; reduced nodes are
-     * compared by their memory address, which ends up using
-     * shared_ptr's implementation of the operator.
-     */
-
-    bool operator == (const terminal_t &other) const
-    {
-        return _value == other._value;
-    }
-
-    /**
-     * Compare two terminals by value.  Note that this operator is
-     * usually not the one that will be used; reduced nodes are
-     * compared by their memory address, which ends up using
-     * shared_ptr's implementation of the operator.
-     */
-
-    bool operator < (const terminal_t &other) const
-    {
-        return _value < other._value;
-    }
-
-    /**
-     * Evaluate a BDD given a particular variable assignment.  The
-     * variable assignment should a vector-like class whose elements
-     * can be cast to bools.  It should contain enough elements for
-     * all of the variables in the BDD tree.
-     */
-
-    template <typename Assignment>
-    Value evaluate(const Assignment &variables) const
-    {
-        // For a terminal node, we've reached the evaluation result,
-        // so we can just return it.
-
-        return _value;
-    }
-};
+typedef int  node_id_t;
 
 
 /**
- * A nonterminal node.  This is an inner node of the BDD tree.  The
- * node represents one variable in an overall variable assignment.
+ * A nonterminal BDD node.  This is an inner node of the BDD tree.
+ * The node represents one variable in an overall variable assignment.
  * The node has two children: a “low” child and a “high” child.  The
  * low child is the subtree that applies when the node's variable is
  * false or 0; the high child is the subtree that applies when it's
@@ -175,14 +71,9 @@ public:
  * reduced; that is handled by the node_cache_t class.
  */
 
-template <typename Value>
-class nonterminal_t
+class node_t
 {
 private:
-    // Shorthand typedefs
-
-    typedef typename types<Value>::node  node_t;
-
     /**
      * The variable that this node represents.
      */
@@ -193,34 +84,43 @@ private:
      * The subtree node for when the variable is false.
      */
 
-    node_t  _low;
+    node_id_t  _low;
 
     /**
      * The subtree node for when the variable is true.
      */
 
-    node_t  _high;
+    node_id_t  _high;
 
 public:
     /**
      * Create a new nonterminal node for the given variable and
-     * subtrees.  Most user code should not create nonterminal_t
-     * objects by hand; instead, they should use the node_cache_t
-     * class.
+     * subtrees.  Most user code should not create node_t objects by
+     * hand; instead, they should use the node_cache_t class.
      *
      * Note that we do not ensure that nonterminal nodes are reduced:
-     * it's perfectly valid to instantiate two nonterminal_t objects
-     * by hand with the same contents.  If you do so, those two
-     * objects will live at different memory locations, and won't be
-     * reduced.
+     * it's perfectly valid to instantiate two node_t objects by hand
+     * with the same contents.  If you do so, those two objects will
+     * live at different memory locations, and won't be reduced.
      */
 
-    nonterminal_t(variable_t variable_,
-                  const node_t &low_,
-                  const node_t &high_):
+    node_t(const variable_t variable_,
+           const node_id_t &low_,
+           const node_id_t &high_):
         _variable(variable_),
         _low(low_),
         _high(high_)
+    {
+    }
+
+    /**
+     * Create a copy of a nonterminal node.
+     */
+
+    node_t(const node_t &other):
+        _variable(other._variable),
+        _low(other._low),
+        _high(other._high)
     {
     }
 
@@ -234,21 +134,21 @@ public:
     }
 
     /**
-     * Return the subtree node for when the variable is false.
+     * Return the ID of the subtree node for when the variable is
+     * false.
      */
 
-    const node_t &
-    low() const
+    node_id_t low() const
     {
         return _low;
     }
 
     /**
-     * Return the subtree node for when the variable is true.
+     * Return the ID of the subtree node for when the variable is
+     * true.
      */
 
-    const node_t &
-    high() const
+    node_id_t high() const
     {
         return _high;
     }
@@ -260,7 +160,7 @@ public:
      * shared_ptr's implementation of the operator.
      */
 
-    bool operator == (const nonterminal_t &other) const
+    bool operator == (const node_t &other) const
     {
         return
             (_variable == other._variable) &&
@@ -275,7 +175,7 @@ public:
      * shared_ptr's implementation of the operator.
      */
 
-    bool operator < (const nonterminal_t &other) const
+    bool operator < (const node_t &other) const
     {
         if (_variable < other._variable)
             return true;
@@ -289,185 +189,133 @@ public:
 
         return (_high < other._high);
     }
-
-    /**
-     * Evaluate a BDD given a particular variable assignment.  The
-     * variable assignment should a vector-like class whose elements
-     * can be cast to bools.  It should contain enough elements for
-     * all of the variables in the BDD tree.
-     */
-
-    template <typename Assignment>
-    Value evaluate(const Assignment &variables) const
-    {
-        if (variables[_variable])
-        {
-            // This node's variable is true in the assignment vector,
-            // so trace down the high subtree.
-
-            return _high.evaluate(variables);
-        } else {
-            // This node's variable is false in the assignment vector,
-            // so trace down the low subtree.
-
-            return _low.evaluate(variables);
-        }
-    }
 };
+
+
+std::ostream &
+operator << (std::ostream &stream, const node_t &node);
 
 
 /**
- * A node that might be terminal or nonterminal.  This is basically
- * just a wrapper around a Boost Variant, with some helper methods
- * that reduce typing when accessing the details of the node.
+ * A cache for BDD nodes.  By creating and retrieving nodes through
+ * the cache, we ensure that a BDD is reduced.
  */
 
-template <typename Value>
-class node_t
+class node_cache_t
 {
 private:
-    // Shorthand typedefs
-
-    typedef typename types<Value>::terminal  terminal_p;
-    typedef typename types<Value>::nonterminal  nonterminal_p;
-
-public:
     /**
-     * The Boost Variant type used to store the terminal or
-     * nonterminal for this node.  Note that these are shared
-     * pointers, so that we can correctly use reduced nodes when
-     * node_t instances are copied around.
+     * A vector of the node objects that have been created.
      */
 
-    typedef boost::variant<terminal_p, nonterminal_p>  variant_t;
+    typedef std::vector<node_t>  node_list_t;
 
-private:
+    node_list_t  _nodes;
+
     /**
-     * The terminal or nonterminal for this node.
+     * Convert between an index in the node vector, and the ID of the
+     * corresponding nonterminal.  (Nonterminals have IDs < 0)
      */
 
-    variant_t  _variant;
-
-public:
-    /**
-     * Create a new node_t for a terminal node.
-     */
-
-    node_t(terminal_p terminal):
-        _variant(terminal)
+    static node_list_t::size_type
+    node_id_to_index(node_id_t id)
     {
+        return (-id) - 1;
     }
 
     /**
-     * Create a new node_t for a nonterminal node.
+     * Convert between the ID of a nonterminal and its index in the
+     * node vector.  (Nonterminals have IDs < 0)
      */
 
-    node_t(nonterminal_p nonterminal):
-        _variant(nonterminal)
+    static node_id_t
+    index_to_node_id(node_list_t::size_type index)
     {
+        return -(index + 1);
     }
 
     /**
-     * Create a copy of a node.  Since we use shared pointers, the
-     * underlying terminal_t or nonterminal_t is not copied; instead,
-     * we get a new shared_ptr to it, with an increased reference
-     * count.
+     * A function object that creates a nonterminal node.  This will
+     * be cached to ensure that the BDD nodes are reduced.
      */
 
-    node_t(const node_t &other):
-        _variant(other._variant)
+    struct nonterminal_creator:
+        cached_ternary_function_t<nonterminal_creator,
+                                  variable_t, node_id_t, node_id_t,
+                                  node_id_t>
     {
-    }
+        node_list_t  &_nodes;
 
-    /**
-     * Assign a copy of a node.  Since we use shared pointers, the
-     * underlying terminal_t or nonterminal_t is not copied; instead,
-     * we get a new shared_ptr to it, with an increased reference
-     * count.
-     */
-
-    node_t &
-    operator = (const node_t &other)
-    {
-        _variant = other._variant;
-        return (*this);
-    }
-
-    /**
-     * Test two nodes for equality.  Since we use shared pointers,
-     * nodes are compared by their memory address, which gives us the
-     * correct semantics for reduced nodes.
-     */
-
-    bool operator == (const node_t &other) const
-    {
-        return _variant == other._variant;
-    }
-
-    /**
-     * Compare two nodes.  Since we use shared pointers, nodes are
-     * compared by their memory address, which gives us the correct
-     * semantics for reduced nodes.
-     */
-
-    bool operator < (const node_t &other) const
-    {
-        return _variant < other._variant;
-    }
-
-    /**
-     * Coerce this node into a terminal.  If the node isn't a
-     * terminal, Boost's bad_get exception will be thrown.
-     */
-
-    terminal_p as_terminal() const
-    {
-        return boost::get<terminal_p>(_variant);
-    }
-
-    /**
-     * Coerce this node into a nonterminal.  If the node isn't a
-     * nonterminal, Boost's bad_get exception will be thrown.
-     */
-
-    nonterminal_p as_nonterminal() const
-    {
-        return boost::get<nonterminal_p>(_variant);
-    }
-
-    /**
-     * Return the Boost Variant instance for this node.
-     */
-
-    const variant_t &
-    variant() const
-    {
-        return _variant;
-    }
-
-private:
-    /**
-     * A variant visitor for the evaluate() method.
-     */
-
-    template <typename Assignment>
-    struct evaluate_visitor: public boost::static_visitor<Value>
-    {
-        const Assignment  &_variables;
-
-        evaluate_visitor(const Assignment &variables_):
-            _variables(variables_)
+        nonterminal_creator(node_list_t &nodes_):
+            _nodes(nodes_)
         {
         }
 
-        template <typename T>
-        Value operator () (const T &node) const
+        node_id_t
+        call(variable_t variable, node_id_t low, node_id_t high)
         {
-            return node->evaluate(_variables);
+            node_t  node(variable, low, high);
+            node_id_t  new_id = index_to_node_id(_nodes.size());
+            _nodes.push_back(node);
+            return new_id;
         }
     };
 
+    /**
+     * The cached function for creating nonterminal nodes.
+     */
+
+    nonterminal_creator  _nonterminals;
+
 public:
+    /**
+     * Create a new, empty node cache.
+     */
+
+    node_cache_t():
+        _nodes(),
+        _nonterminals(_nodes)
+    {
+    }
+
+    /**
+     * Return the index of a terminal node.
+     */
+
+    node_id_t
+    terminal(range_t value) const
+    {
+        return value;
+    }
+
+    /**
+     * Return the index of a nonterminal node, creating it if
+     * necessary.
+     */
+
+    node_id_t
+    nonterminal(variable_t variable, node_id_t low, node_id_t high)
+    {
+        // Don't allow any nonterminals whose low and high subtrees
+        // are the same, since the nonterminal would be redundant.
+
+        if (low == high)
+            return low;
+
+        return _nonterminals(variable, low, high);
+    }
+
+    /**
+     * Return a reference to the nonterminal node with the given ID.
+     * The result is undefined if you pass in a terminal ID.
+     */
+
+    const node_t &
+    node(node_id_t id) const
+    {
+        return _nodes[node_id_to_index(id)];
+    }
+
     /**
      * Evaluate a BDD given a particular variable assignment.  The
      * variable assignment should a vector-like class whose elements
@@ -476,21 +324,37 @@ public:
      */
 
     template <typename Assignment>
-    Value evaluate(const Assignment &variables) const
+    range_t evaluate(node_id_t node_id,
+                     const Assignment &variables) const
     {
-        return boost::apply_visitor
-            (evaluate_visitor<Assignment>(variables), _variant);
+        // As long as the current node is a nonterminal, we have to
+        // check the value of the current variable.
+
+        while (node_id < 0)
+        {
+            // We have to look up this variable in the assignment.
+
+            const node_t  &node = this->node(node_id);
+
+            if (variables[node.variable()])
+            {
+                // This node's variable is true in the assignment vector,
+                // so trace down the high subtree.
+
+                node_id = node.high();
+            } else {
+                // This node's variable is false in the assignment vector,
+                // so trace down the low subtree.
+
+                node_id = node.low();
+            }
+        }
+
+        // Once we find a terminal node, we've got the final result.
+
+        return node_id;
     }
 };
-
-
-template <typename Value>
-std::ostream &
-operator << (std::ostream &stream, const node_t<Value> &node)
-{
-    stream << node.variant();
-    return stream;
-}
 
 
 } // namespace bdd

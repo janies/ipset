@@ -20,7 +20,6 @@
 
 #include <ip/bdd/engine.hh>
 #include <ip/bdd/nodes.hh>
-#include <ip/bdd/set.hh>
 
 using namespace ip::bdd;
 
@@ -30,42 +29,22 @@ using namespace ip::bdd;
 
 TEST(BDD_False_Terminal)
 {
-    std::cerr << "Starting BDD_False_Terminal test case." << std::endl;
+    node_cache_t  cache;
 
-    engine_t<bool>  engine;
+    node_id_t  n_false = cache.terminal(false);
 
-    types<bool>::node  n_false = engine.terminal(false);
-    types<bool>::terminal  t_false = n_false.as_terminal();
-
-    CHECK_EQUAL(false, t_false->value());
+    CHECK_EQUAL(false, n_false);
 }
-
 
 TEST(BDD_True_Terminal)
 {
     std::cerr << "Starting BDD_True_Terminal test case." << std::endl;
 
-    engine_t<bool>  engine;
+    node_cache_t  cache;
 
-    types<bool>::node  n_true = engine.terminal(true);
-    types<bool>::terminal  t_true = n_true.as_terminal();
+    node_id_t  n_true = cache.terminal(true);
 
-    CHECK_EQUAL(true, t_true->value());
-}
-
-
-TEST(BDD_Terminal_NotReduced_1)
-{
-    std::cerr << "Starting BDD_Terminal_NotReduced_1 test case." << std::endl;
-
-    // If we create terminals by hand, they won't be reduced — i.e.,
-    // we can have two terminals with the same value but at different
-    // memory locations.
-
-    types<bool>::terminal  node1(new terminal_t<bool>(false));
-    types<bool>::terminal  node2(new terminal_t<bool>(false));
-
-    CHECK(node1 != node2);
+    CHECK_EQUAL(true, n_true);
 }
 
 
@@ -77,10 +56,10 @@ TEST(BDD_Terminal_Reduced_1)
     // i.e., every terminal with the same value will be in the same
     // memory location.
 
-    engine_t<bool>  engine;
+    node_cache_t  cache;
 
-    types<bool>::node  node1 = engine.terminal(false);
-    types<bool>::node  node2 = engine.terminal(false);
+    node_id_t  node1 = cache.terminal(false);
+    node_id_t  node2 = cache.terminal(false);
 
     CHECK_EQUAL(node1, node2);
 }
@@ -93,39 +72,19 @@ TEST(BDD_Nonterminal_1)
 {
     std::cerr << "Starting BDD_Nonterminal_1 test case." << std::endl;
 
-    engine_t<bool>  engine;
+    node_cache_t  cache;
 
-    types<bool>::node  n_false = engine.terminal(false);
-    types<bool>::node  n_true = engine.terminal(true);
+    node_id_t  n_false = 0;
+    node_id_t  n_true = 1;
 
-    types<bool>::node  node =
-        engine.nonterminal(0, n_false, n_true);
-    types<bool>::nonterminal  nonterminal =
-        node.as_nonterminal();
+    node_id_t  node =
+        cache.nonterminal(0, n_false, n_true);
 
-    CHECK_EQUAL(0u, nonterminal->variable());
-    CHECK_EQUAL(n_false, nonterminal->low());
-    CHECK_EQUAL(n_true, nonterminal->high());
-}
+    const node_t  &n = cache.node(node);
 
-
-TEST(BDD_Nonterminal_NotReduced_1)
-{
-    std::cerr << "Starting BDD_Nonterminal_NotReduced_1 test case." << std::endl;
-
-    // If we create nonterminals by hand, they won't be reduced —
-    // i.e., we can have two nonterminals with the same value but at
-    // different memory locations.
-
-    types<bool>::terminal  t_false(new terminal_t<bool>(false));
-    types<bool>::terminal  t_true(new terminal_t<bool>(true));
-
-    types<bool>::nonterminal  node1
-        (new nonterminal_t<bool>(0, t_false, t_true));
-    types<bool>::nonterminal  node2
-        (new nonterminal_t<bool>(0, t_false, t_true));
-
-    CHECK(node1 != node2);
+    CHECK_EQUAL(0u, n.variable());
+    CHECK_EQUAL(n_false, n.low());
+    CHECK_EQUAL(n_true, n.high());
 }
 
 
@@ -137,15 +96,15 @@ TEST(BDD_Nonterminal_Reduced_1)
     // reduced — i.e., every nonterminal with the same value will be
     // in the same memory location.
 
-    engine_t<bool>  engine;
+    node_cache_t  cache;
 
-    types<bool>::node  n_false = engine.terminal(false);
-    types<bool>::node  n_true = engine.terminal(true);
+    node_id_t  n_false = cache.terminal(false);
+    node_id_t  n_true = cache.terminal(true);
 
-    types<bool>::node  node1 =
-        engine.nonterminal(0, n_false, n_true);
-    types<bool>::node  node2 =
-        engine.nonterminal(0, n_false, n_true);
+    node_id_t  node1 =
+        cache.nonterminal(0, n_false, n_true);
+    node_id_t  node2 =
+        cache.nonterminal(0, n_false, n_true);
 
     CHECK_EQUAL(node1, node2);
 }
@@ -158,12 +117,12 @@ TEST(BDD_Nonterminal_Reduced_2)
     // We shouldn't have a nonterminal whose low and high subtrees are
     // equal.
 
-    engine_t<bool>  engine;
+    node_cache_t  cache;
 
-    types<bool>::node  n_false = engine.terminal(false);
+    node_id_t  n_false = cache.terminal(false);
 
-    types<bool>::node  node =
-        engine.nonterminal(0, n_false, n_false);
+    node_id_t  node =
+        cache.nonterminal(0, n_false, n_false);
 
     CHECK_EQUAL(node, n_false);
 }
@@ -179,20 +138,20 @@ TEST(BDD_Evaluate_1)
     // Create a BDD representing
     //   f(x) = ¬x[0]
 
-    engine_t<bool>  engine;
+    node_cache_t  cache;
 
-    types<bool>::node  n_false = engine.terminal(false);
-    types<bool>::node  n_true = engine.terminal(true);
+    node_id_t  n_false = cache.terminal(false);
+    node_id_t  n_true = cache.terminal(true);
 
-    types<bool>::node  node = engine.nonterminal(0, n_true, n_false);
+    node_id_t  node = cache.nonterminal(0, n_true, n_false);
 
     // And test we can get the right results out of it.
 
     bool  input1[] = { true };
     bool  input2[] = { false };
 
-    CHECK_EQUAL(false, node.evaluate(input1));
-    CHECK_EQUAL(true, node.evaluate(input2));
+    CHECK_EQUAL(false, cache.evaluate(node, input1));
+    CHECK_EQUAL(true, cache.evaluate(node, input2));
 }
 
 
@@ -203,13 +162,13 @@ TEST(BDD_Evaluate_2)
     // Create a BDD representing
     //   f(x) = ¬x[0] ∧ x[1]
 
-    engine_t<bool>  engine;
+    node_cache_t  cache;
 
-    types<bool>::node  n_false = engine.terminal(false);
-    types<bool>::node  n_true = engine.terminal(true);
+    node_id_t  n_false = cache.terminal(false);
+    node_id_t  n_true = cache.terminal(true);
 
-    types<bool>::node  node1 = engine.nonterminal(1, n_false, n_true);
-    types<bool>::node  node = engine.nonterminal(0, node1, n_false);
+    node_id_t  node1 = cache.nonterminal(1, n_false, n_true);
+    node_id_t  node = cache.nonterminal(0, node1, n_false);
 
     // And test we can get the right results out of it.
 
@@ -218,10 +177,10 @@ TEST(BDD_Evaluate_2)
     bool  input3[] = { false, true };
     bool  input4[] = { false, false };
 
-    CHECK_EQUAL(false, node.evaluate(input1));
-    CHECK_EQUAL(false, node.evaluate(input2));
-    CHECK_EQUAL(true, node.evaluate(input3));
-    CHECK_EQUAL(false, node.evaluate(input4));
+    CHECK_EQUAL(false, cache.evaluate(node, input1));
+    CHECK_EQUAL(false, cache.evaluate(node, input2));
+    CHECK_EQUAL(true, cache.evaluate(node, input3));
+    CHECK_EQUAL(false, cache.evaluate(node, input4));
 }
 
 
@@ -237,21 +196,21 @@ TEST(BDD_And_Reduced_1)
 
     bool_engine_t  engine;
 
-    types<bool>::node  n_false0 = engine.terminal(false);
-    types<bool>::node  n_true0 = engine.terminal(true);
+    node_id_t  n_false0 = engine.false_node();
+    node_id_t  n_true0 = engine.true_node();
 
-    types<bool>::node  node00 = engine.nonterminal(0, n_false0, n_true0);
-    types<bool>::node  node01 = engine.nonterminal(1, n_false0, n_true0);
-    types<bool>::node  node0 = engine.apply_and(node00, node01);
+    node_id_t  node00 = engine.nonterminal(0, n_false0, n_true0);
+    node_id_t  node01 = engine.nonterminal(1, n_false0, n_true0);
+    node_id_t  node0 = engine.apply_and(node00, node01);
 
     // And then do it again.
 
-    types<bool>::node  n_false1 = engine.terminal(false);
-    types<bool>::node  n_true1 = engine.terminal(true);
+    node_id_t  n_false1 = engine.false_node();
+    node_id_t  n_true1 = engine.true_node();
 
-    types<bool>::node  node10 = engine.nonterminal(0, n_false1, n_true1);
-    types<bool>::node  node11 = engine.nonterminal(1, n_false1, n_true1);
-    types<bool>::node  node1 = engine.apply_and(node10, node11);
+    node_id_t  node10 = engine.nonterminal(0, n_false1, n_true1);
+    node_id_t  node11 = engine.nonterminal(1, n_false1, n_true1);
+    node_id_t  node1 = engine.apply_and(node10, node11);
 
     // Verify that we get the same physical node both times.
 
@@ -268,12 +227,12 @@ TEST(BDD_And_Evaluate_1)
 
     bool_engine_t  engine;
 
-    types<bool>::node  n_false = engine.terminal(false);
-    types<bool>::node  n_true = engine.terminal(true);
+    node_id_t  n_false = engine.false_node();
+    node_id_t  n_true = engine.true_node();
 
-    types<bool>::node  node0 = engine.nonterminal(0, n_false, n_true);
-    types<bool>::node  node1 = engine.nonterminal(1, n_false, n_true);
-    types<bool>::node  node = engine.apply_and(node0, node1);
+    node_id_t  node0 = engine.nonterminal(0, n_false, n_true);
+    node_id_t  node1 = engine.nonterminal(1, n_false, n_true);
+    node_id_t  node = engine.apply_and(node0, node1);
 
     // And test we can get the right results out of it.
 
@@ -282,10 +241,10 @@ TEST(BDD_And_Evaluate_1)
     bool  input3[] = { false, true };
     bool  input4[] = { false, false };
 
-    CHECK_EQUAL(true, node.evaluate(input1));
-    CHECK_EQUAL(false, node.evaluate(input2));
-    CHECK_EQUAL(false, node.evaluate(input3));
-    CHECK_EQUAL(false, node.evaluate(input4));
+    CHECK_EQUAL(true, engine.evaluate(node, input1));
+    CHECK_EQUAL(false, engine.evaluate(node, input2));
+    CHECK_EQUAL(false, engine.evaluate(node, input3));
+    CHECK_EQUAL(false, engine.evaluate(node, input4));
 }
 
 
@@ -298,21 +257,21 @@ TEST(BDD_Or_Reduced_1)
 
     bool_engine_t  engine;
 
-    types<bool>::node  n_false0 = engine.terminal(false);
-    types<bool>::node  n_true0 = engine.terminal(true);
+    node_id_t  n_false0 = engine.false_node();
+    node_id_t  n_true0 = engine.true_node();
 
-    types<bool>::node  node00 = engine.nonterminal(0, n_false0, n_true0);
-    types<bool>::node  node01 = engine.nonterminal(1, n_false0, n_true0);
-    types<bool>::node  node0 = engine.apply_or(node00, node01);
+    node_id_t  node00 = engine.nonterminal(0, n_false0, n_true0);
+    node_id_t  node01 = engine.nonterminal(1, n_false0, n_true0);
+    node_id_t  node0 = engine.apply_or(node00, node01);
 
     // And then do it again.
 
-    types<bool>::node  n_false1 = engine.terminal(false);
-    types<bool>::node  n_true1 = engine.terminal(true);
+    node_id_t  n_false1 = engine.false_node();
+    node_id_t  n_true1 = engine.true_node();
 
-    types<bool>::node  node10 = engine.nonterminal(0, n_false1, n_true1);
-    types<bool>::node  node11 = engine.nonterminal(1, n_false1, n_true1);
-    types<bool>::node  node1 = engine.apply_or(node10, node11);
+    node_id_t  node10 = engine.nonterminal(0, n_false1, n_true1);
+    node_id_t  node11 = engine.nonterminal(1, n_false1, n_true1);
+    node_id_t  node1 = engine.apply_or(node10, node11);
 
     // Verify that we get the same physical node both times.
 
@@ -329,12 +288,12 @@ TEST(BDD_Or_Evaluate_1)
 
     bool_engine_t  engine;
 
-    types<bool>::node  n_false = engine.terminal(false);
-    types<bool>::node  n_true = engine.terminal(true);
+    node_id_t  n_false = engine.false_node();
+    node_id_t  n_true = engine.true_node();
 
-    types<bool>::node  node0 = engine.nonterminal(0, n_false, n_true);
-    types<bool>::node  node1 = engine.nonterminal(1, n_false, n_true);
-    types<bool>::node  node = engine.apply_or(node0, node1);
+    node_id_t  node0 = engine.nonterminal(0, n_false, n_true);
+    node_id_t  node1 = engine.nonterminal(1, n_false, n_true);
+    node_id_t  node = engine.apply_or(node0, node1);
 
     // And test we can get the right results out of it.
 
@@ -343,10 +302,10 @@ TEST(BDD_Or_Evaluate_1)
     bool  input3[] = { false, true };
     bool  input4[] = { false, false };
 
-    CHECK_EQUAL(true, node.evaluate(input1));
-    CHECK_EQUAL(true, node.evaluate(input2));
-    CHECK_EQUAL(true, node.evaluate(input3));
-    CHECK_EQUAL(false, node.evaluate(input4));
+    CHECK_EQUAL(true, engine.evaluate(node, input1));
+    CHECK_EQUAL(true, engine.evaluate(node, input2));
+    CHECK_EQUAL(true, engine.evaluate(node, input3));
+    CHECK_EQUAL(false, engine.evaluate(node, input4));
 }
 
 
