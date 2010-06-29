@@ -171,6 +171,130 @@ TEST(IPv4_Set_Idempotent_Net)
 
 
 //--------------------------------------------------------------------
+// IPv6 sets
+
+TEST(IPv6_Set_Nonempty)
+{
+    std::cerr << "Starting IPv6_Set_Nonempty test case." << std::endl;
+
+    set_t  s1;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+
+    s1.add(a1);
+
+    CHECK(!s1.empty());
+}
+
+TEST(IPv6_Set_Nonempty_Net)
+{
+    std::cerr << "Starting IPv6_Set_Nonempty_Net test case." << std::endl;
+
+    set_t  s1;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+
+    s1.add(a1, 16);
+
+    CHECK(!s1.empty());
+}
+
+TEST(IPv6_Set_Equal_1)
+{
+    std::cerr << "Starting IPv6_Set_Equal_1 test case." << std::endl;
+
+    set_t  s1;
+    set_t  s2;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+
+    s1.add(a1);
+    s2.add(a1);
+
+    CHECK(s1 == s2);
+}
+
+TEST(IPv6_Set_Equal_Net_1)
+{
+    std::cerr << "Starting IPv6_Set_Equal_Net_1 test case." << std::endl;
+
+    set_t  s1;
+    set_t  s2;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+
+    s1.add(a1, 16);
+    s2.add(a1, 16);
+
+    CHECK(s1 == s2);
+}
+
+TEST(IPv6_Set_Equal_2)
+{
+    std::cerr << "Starting IPv6_Set_Equal_2 test case." << std::endl;
+
+    set_t  s1;
+    set_t  s2;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+    ipv6_addr_t  a2(0,0,0,0,0,0xffff,0xc0a8,0x0001);
+
+    s1.add(a1);
+    s1.add(a2);
+
+    s2.add(a1);
+    s2.add(a2);
+
+    CHECK(s1 == s2);
+}
+
+TEST(IPv6_Set_Equal_Net_2)
+{
+    std::cerr << "Starting IPv6_Set_Equal_Net_2 test case." << std::endl;
+
+    set_t  s1;
+    set_t  s2;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+    ipv6_addr_t  a2(0,0,0,0,0,0xffff,0xc0a8,0x0001);
+
+    s1.add(a1, 16);
+    s1.add(a2, 16);
+
+    s2.add(a1, 16);
+    s2.add(a2, 16);
+
+    CHECK(s1 == s2);
+}
+
+TEST(IPv6_Set_Idempotent)
+{
+    std::cerr << "Starting IPv6_Set_Idempotent test case." << std::endl;
+
+    set_t  s1;
+    set_t  s2;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+
+    CHECK(!s1.add(a1));
+    CHECK(s1.add(a1));
+
+    s2.add(a1);
+
+    CHECK(s1 == s2);
+}
+
+TEST(IPv6_Set_Idempotent_Net)
+{
+    std::cerr << "Starting IPv6_Set_Idempotent_Net test case." << std::endl;
+
+    set_t  s1;
+    set_t  s2;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+
+    CHECK(!s1.add(a1, 16));
+    CHECK(s1.add(a1, 16));
+
+    s2.add(a1, 16);
+
+    CHECK(s1 == s2);
+}
+
+
+//--------------------------------------------------------------------
 // Boilerplate
 
 int main(int argc, char **argv)
