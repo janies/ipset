@@ -45,6 +45,25 @@ TEST(IP_Set_Empty_Equal)
     CHECK_EQUAL(s1, s2);
 }
 
+TEST(IP_Set_v4_v6_Distinct)
+{
+    std::cerr << "Starting IP_Set_v4_v6_Distinct test case." << std::endl;
+
+    // Verify that IPv4 addresses and IPv6 addresses don't overlap.
+
+    set_t  s1;
+    set_t  s2;
+
+    // The first four bytes of a2 are the same as a1.
+    ipv4_addr_t  a1(192,168,0,1);
+    ipv6_addr_t  a2(0xc0a8,0x0001,0,0,0,0,0,0);
+
+    s1.add(a1);
+    s2.add(a2, 32);
+
+    CHECK(s1 != s2);
+}
+
 
 //--------------------------------------------------------------------
 // IPv4 sets
@@ -84,7 +103,7 @@ TEST(IPv4_Set_Equal_1)
     s1.add(a1);
     s2.add(a1);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv4_Set_Equal_Net_1)
@@ -98,7 +117,7 @@ TEST(IPv4_Set_Equal_Net_1)
     s1.add(a1, 16);
     s2.add(a1, 16);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv4_Set_Equal_2)
@@ -116,7 +135,7 @@ TEST(IPv4_Set_Equal_2)
     s2.add(a1);
     s2.add(a2);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv4_Set_Equal_Net_2)
@@ -134,7 +153,7 @@ TEST(IPv4_Set_Equal_Net_2)
     s2.add(a1, 16);
     s2.add(a2, 16);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv4_Set_Idempotent)
@@ -150,7 +169,7 @@ TEST(IPv4_Set_Idempotent)
 
     s2.add(a1);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv4_Set_Idempotent_Net)
@@ -166,7 +185,7 @@ TEST(IPv4_Set_Idempotent_Net)
 
     s2.add(a1, 16);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 
@@ -208,7 +227,7 @@ TEST(IPv6_Set_Equal_1)
     s1.add(a1);
     s2.add(a1);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv6_Set_Equal_Net_1)
@@ -222,7 +241,7 @@ TEST(IPv6_Set_Equal_Net_1)
     s1.add(a1, 16);
     s2.add(a1, 16);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv6_Set_Equal_2)
@@ -240,7 +259,7 @@ TEST(IPv6_Set_Equal_2)
     s2.add(a1);
     s2.add(a2);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv6_Set_Equal_Net_2)
@@ -258,7 +277,7 @@ TEST(IPv6_Set_Equal_Net_2)
     s2.add(a1, 16);
     s2.add(a2, 16);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv6_Set_Idempotent)
@@ -274,7 +293,7 @@ TEST(IPv6_Set_Idempotent)
 
     s2.add(a1);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 TEST(IPv6_Set_Idempotent_Net)
@@ -290,7 +309,7 @@ TEST(IPv6_Set_Idempotent_Net)
 
     s2.add(a1, 16);
 
-    CHECK(s1 == s2);
+    CHECK_EQUAL(s1, s2);
 }
 
 

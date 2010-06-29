@@ -29,6 +29,48 @@ class set_t
 {
 private:
     /**
+     * Return the BDD variable number for the given bit of an IPv4
+     * address.
+     */
+
+    static ip::bdd::variable_t
+    ipv4_var(int index)
+    {
+        return index;
+    }
+
+    /**
+     * Return the BDD variable number for the given bit of an IPv6
+     * address.
+     */
+
+    static ip::bdd::variable_t
+    ipv6_var(int index)
+    {
+        return index + ipv4_addr_t::bit_size;
+    }
+
+    /**
+     * Return the bit index for a given IPv4 BDD variable.
+     */
+
+    static int
+    ipv4_index(ip::bdd::variable_t var)
+    {
+        return var;
+    }
+
+    /**
+     * Return the bit index for a given IPv6 BDD variable.
+     */
+
+    static int
+    ipv6_index(ip::bdd::variable_t var)
+    {
+        return var - ipv4_addr_t::bit_size;
+    }
+
+    /**
      * Create a BDD for an IPv4 address or family of IP addresses.
      * The corresponding BDD will have each boolean variable set if
      * the corresponding bit is set in the IP address.  The netmask
@@ -154,16 +196,16 @@ public:
     add(const ipv4_addr_t &addr,
         int netmask = ipv4_addr_t::bit_size)
     {
-        return add_ipv4(static_cast<const boost::uint8_t *>(addr),
-                        netmask);
+        return add_ipv4
+            (static_cast<const boost::uint8_t *>(addr), netmask);
     }
 
     /**
      * Add an IPv6 address or network to an IP set.  We don't care
      * what specific type is used to represent the address; elem
-     * should be a pointer to an address stored as a 32-bit big-endian
-     * integer.  If netmask is not given, it defaults to 32 — i.e., a
-     * single IP address.
+     * should be a pointer to an address stored as a 128-bit
+     * big-endian integer.  If netmask is not given, it defaults to
+     * 128 — i.e., a single IP address.
      *
      * Return whether the value was already in the set or not.
      */
@@ -175,7 +217,7 @@ public:
     /**
      * Add an IPv6 address or network to an IP set, based on an
      * address stored in an ipv6_addr_t.  If netmask is not given, it
-     * defaults to 32 — i.e., a single IP address.
+     * defaults to 128 — i.e., a single IP address.
      *
      * Return whether the value was already in the set or not.
      */
@@ -184,8 +226,8 @@ public:
     add(const ipv6_addr_t &addr,
         int netmask = ipv6_addr_t::bit_size)
     {
-        return add_ipv6(static_cast<const boost::uint8_t *>(addr),
-                        netmask);
+        return add_ipv6
+            (static_cast<const boost::uint8_t *>(addr), netmask);
     }
 
 

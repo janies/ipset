@@ -41,6 +41,23 @@ set_t::empty() const
 }
 
 
+/**
+ * A helper method that returns the corresponding bit in a raw data
+ * array.  The bits are numbered from 0, starting with the MSB of each
+ * byte.
+ */
+
+static inline bool
+get_bit(const boost::uint8_t *addr, int index)
+{
+    int  byte_index = index / 8;
+    int  bit_number = index % 8;
+    int  bit_mask = 0x80 >> bit_number;
+
+    return ((addr[byte_index] & bit_mask) != 0);
+}
+
+
 node_id_t
 set_t::create_ipv4_bdd
 (const boost::uint8_t *addr, int netmask)
@@ -74,20 +91,25 @@ set_t::create_ipv4_bdd
     // Since the BDD needs to be ordered, we have to iterate through
     // the IP address's bits in reverse order.
 
-    for (variable_t i = netmask; i > 0; i--)
+    for (int i = netmask-1; i >= 0; i--)
     {
-        variable_t  var = i - 1;  // need this b/c variable_t is unsigned
-        int  byte_index = var / 8;
-        int  bit_number = var % 8;
-        int  bit_mask = 0x80 >> bit_number;
+        variable_t  var = ipv4_var(i);
 
-        if ((addr[byte_index] & bit_mask) == 0)
+        if (get_bit(addr, i))
         {
-            // This bit is not set in the IP address.
-            result = engine.nonterminal(var, result, false_node);
-        } else {
+            DVLOG(4) << "Bit " << i
+                     << " (var " << var
+                     << ") is set";
+
             // This bit is set in the IP address.
             result = engine.nonterminal(var, false_node, result);
+        } else {
+            DVLOG(4) << "Bit " << i
+                     << " (var " << var
+                     << ") is NOT set";
+
+            // This bit is not set in the IP address.
+            result = engine.nonterminal(var, result, false_node);
         }
     }
 
@@ -130,20 +152,25 @@ set_t::create_ipv6_bdd
     // Since the BDD needs to be ordered, we have to iterate through
     // the IP address's bits in reverse order.
 
-    for (variable_t i = netmask; i > 0; i--)
+    for (int i = netmask-1; i >= 0; i--)
     {
-        variable_t  var = i - 1;  // need this b/c variable_t is unsigned
-        int  byte_index = var / 8;
-        int  bit_number = var % 8;
-        int  bit_mask = 0x80 >> bit_number;
+        variable_t  var = ipv6_var(i);
 
-        if ((addr[byte_index] & bit_mask) == 0)
+        if (get_bit(addr, i))
         {
-            // This bit is not set in the IP address.
-            result = engine.nonterminal(var, result, false_node);
-        } else {
+            DVLOG(4) << "Bit " << i
+                     << " (var " << var
+                     << ") is set";
+
             // This bit is set in the IP address.
             result = engine.nonterminal(var, false_node, result);
+        } else {
+            DVLOG(4) << "Bit " << i
+                     << " (var " << var
+                     << ") is NOT set";
+
+            // This bit is not set in the IP address.
+            result = engine.nonterminal(var, result, false_node);
         }
     }
 
