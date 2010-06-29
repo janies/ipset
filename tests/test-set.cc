@@ -92,6 +92,60 @@ TEST(IPv4_Set_Nonempty_Net)
     CHECK(!s1.empty());
 }
 
+TEST(IPv4_Set_Contains_1)
+{
+    std::cerr << "Starting IPv4_Set_Contains_1 test case." << std::endl;
+
+    set_t  s1;
+    ipv4_addr_t  a1(192,168,0,1);
+
+    s1.add(a1);
+
+    CHECK(s1.contains(a1));
+}
+
+TEST(IPv4_Set_Contains_Net_1)
+{
+    std::cerr << "Starting IPv4_Set_Contains_Net_1 test case." << std::endl;
+
+    set_t  s1;
+    ipv4_addr_t  a1(192,168,0,1);
+
+    s1.add(a1, 16);
+
+    CHECK(s1.contains(a1));
+}
+
+TEST(IPv4_Set_Contains_2)
+{
+    std::cerr << "Starting IPv4_Set_Contains_2 test case." << std::endl;
+
+    set_t  s1;
+    ipv4_addr_t  a1(192,168,0,1);
+    ipv4_addr_t  a2(10,0,5,128);
+
+    s1.add(a1);
+    s1.add(a2);
+
+    CHECK(s1.contains(a1));
+    CHECK(s1.contains(a2));
+}
+
+TEST(IPv4_Set_Contains_Net_2)
+{
+    std::cerr << "Starting IPv4_Set_Contains_Net_2 test case." << std::endl;
+
+    set_t  s1;
+    ipv4_addr_t  a1(192,168,0,1);
+    ipv4_addr_t  a2(10,0,5,128);
+
+    s1.add(a1, 16);
+    s1.add(a2, 16);
+
+    CHECK(s1.contains(a1));
+    CHECK(s1.contains(a2));
+}
+
 TEST(IPv4_Set_Equal_1)
 {
     std::cerr << "Starting IPv4_Set_Equal_1 test case." << std::endl;
@@ -214,6 +268,60 @@ TEST(IPv6_Set_Nonempty_Net)
     s1.add(a1, 16);
 
     CHECK(!s1.empty());
+}
+
+TEST(IPv6_Set_Contains_1)
+{
+    std::cerr << "Starting IPv6_Set_Contains_1 test case." << std::endl;
+
+    set_t  s1;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+
+    s1.add(a1);
+
+    CHECK(s1.contains(a1));
+}
+
+TEST(IPv6_Set_Contains_Net_1)
+{
+    std::cerr << "Starting IPv6_Set_Contains_Net_1 test case." << std::endl;
+
+    set_t  s1;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+
+    s1.add(a1, 16);
+
+    CHECK(s1.contains(a1));
+}
+
+TEST(IPv6_Set_Contains_2)
+{
+    std::cerr << "Starting IPv6_Set_Contains_2 test case." << std::endl;
+
+    set_t  s1;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+    ipv6_addr_t  a2(0,0,0,0,0,0xffff,0xc0a8,0x0001);
+
+    s1.add(a1);
+    s1.add(a2);
+
+    CHECK(s1.contains(a1));
+    CHECK(s1.contains(a2));
+}
+
+TEST(IPv6_Set_Contains_Net_2)
+{
+    std::cerr << "Starting IPv6_Set_Contains_Net_2 test case." << std::endl;
+
+    set_t  s1;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+    ipv6_addr_t  a2(0,0,0,0,0,0xffff,0xc0a8,0x0001);
+
+    s1.add(a1, 16);
+    s1.add(a2, 16);
+
+    CHECK(s1.contains(a1));
+    CHECK(s1.contains(a2));
 }
 
 TEST(IPv6_Set_Equal_1)

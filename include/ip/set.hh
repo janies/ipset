@@ -71,6 +71,20 @@ private:
     }
 
     /**
+     * A helper class that allows an IPv4 byte array to be indexed by
+     * BDD variable rather than by byte.
+     */
+
+    struct ipv4_var_indexed;
+
+    /**
+     * A helper class that allows an IPv6 byte array to be indexed by
+     * BDD variable rather than by byte.
+     */
+
+    struct ipv6_var_indexed;
+
+    /**
      * Create a BDD for an IPv4 address or family of IP addresses.
      * The corresponding BDD will have each boolean variable set if
      * the corresponding bit is set in the IP address.  The netmask
@@ -228,6 +242,48 @@ public:
     {
         return add_ipv6
             (static_cast<const boost::uint8_t *>(addr), netmask);
+    }
+
+    /**
+     * Check whether a particular IPv4 address is in the set.  We
+     * don't care what specific type is used to represent the address;
+     * elem should be a pointer to an address stored as a 32-bit
+     * big-endian integer.
+     */
+
+    bool
+    contains_ipv4(const boost::uint8_t *addr);
+
+    /**
+     * Check whether a particular ipv4_addr_t is in the set.
+     */
+
+    bool
+    contains(const ipv4_addr_t &addr)
+    {
+        return contains_ipv4
+            (static_cast<const boost::uint8_t *>(addr));
+    }
+
+    /**
+     * Check whether a particular IPv6 address is in the set.  We
+     * don't care what specific type is used to represent the address;
+     * elem should be a pointer to an address stored as a 128-bit
+     * big-endian integer.
+     */
+
+    bool
+    contains_ipv6(const boost::uint8_t *addr);
+
+    /**
+     * Check whether a particular ipv6_addr_t is in the set.
+     */
+
+    bool
+    contains(const ipv6_addr_t &addr)
+    {
+        return contains_ipv6
+            (static_cast<const boost::uint8_t *>(addr));
     }
 
 

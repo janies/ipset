@@ -240,6 +240,70 @@ set_t::add_ipv6(const boost::uint8_t *addr, int netmask)
 }
 
 
+/**
+ * A helper class that allows an IPv4 byte array to be indexed by BDD
+ * variable rather than by byte.
+ */
+
+struct set_t::ipv4_var_indexed
+{
+    const boost::uint8_t  *buf;
+
+    ipv4_var_indexed(const boost::uint8_t *buf_):
+        buf(buf_)
+    {
+    }
+
+    bool
+    operator [] (ip::bdd::variable_t var) const
+    {
+        DVLOG(4) << "Getting var " << var
+                 << " (bit " << ipv6_index(var) << ")";
+        return get_bit(buf, ipv4_index(var));
+    }
+};
+
+
+bool
+set_t::contains_ipv4(const boost::uint8_t *addr)
+{
+    ipv4_var_indexed  vi(addr);
+    return engine.evaluate(bdd, vi);
+}
+
+
+/**
+ * A helper class that allows an IPv6 byte array to be indexed by BDD
+ * variable rather than by byte.
+ */
+
+struct set_t::ipv6_var_indexed
+{
+    const boost::uint8_t  *buf;
+
+    ipv6_var_indexed(const boost::uint8_t *buf_):
+        buf(buf_)
+    {
+    }
+
+    bool
+    operator [] (ip::bdd::variable_t var) const
+    {
+        DVLOG(4) << "Getting var " << var
+                 << " (bit " << ipv6_index(var) << ")";
+        return get_bit(buf, ipv6_index(var));
+    }
+};
+
+
+bool
+set_t::contains_ipv6(const boost::uint8_t *addr)
+{
+    ipv6_var_indexed  vi(addr);
+    return engine.evaluate(bdd, vi);
+}
+
+
 std::ostream &
 operator << (std::ostream &stream, const set_t &set)
 {
