@@ -10,6 +10,8 @@
 
 #include <ostream>
 
+#include <glog/logging.h>
+
 #include <ip/bdd/nodes.hh>
 
 namespace ip {
@@ -34,6 +36,8 @@ node_cache_t::nonterminal_creator::call
 {
     node_t  node(variable, low, high);
     node_id_t  new_id = index_to_node_id(_nodes.size());
+    DVLOG(3) << "Node " << new_id
+             << " is now " << node;
     _nodes.push_back(node);
     return new_id;
 }

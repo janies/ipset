@@ -8,11 +8,38 @@
  * ----------------------------------------------------------------------
  */
 
-#include <ostream>
+#include <functional>
 
 #include <ip/bdd/operators.hh>
 #include <ip/bdd/operators-int.hh>
 
 
-template class ip::bdd::binary_operator<std::logical_and<bool> >;
-template class ip::bdd::binary_operator<std::logical_or<bool> >;
+namespace ip {
+namespace bdd {
+
+template <>
+struct operator_name<std::logical_and<bool> >
+{
+    static const std::string op_name()
+    {
+        return "AND";
+    }
+};
+
+
+template <>
+struct operator_name<std::logical_or<bool> >
+{
+    static const std::string op_name()
+    {
+        return "OR";
+    }
+};
+
+
+template class binary_operator<std::logical_and<bool> >;
+template class binary_operator<std::logical_or<bool> >;
+
+
+} // namespace bdd
+} // namespace ip

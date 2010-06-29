@@ -12,6 +12,8 @@
 #define IP__BDD_OPERATORS_HH
 
 
+#include <string>
+
 #include <boost/tuple/tuple.hpp>
 #include <boost/variant.hpp>
 
@@ -21,6 +23,13 @@
 
 namespace ip {
 namespace bdd {
+
+
+template <typename Operator>
+struct operator_name
+{
+    static const std::string op_name();
+};
 
 
 /**

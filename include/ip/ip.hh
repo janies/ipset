@@ -42,6 +42,11 @@ class ip_addr_t;
 class ipv4_addr_t
 {
 public:
+    /**
+     * The number of bits in an IPv4 address.
+     */
+
+    static const int bit_size = 32;
 
     /**
      * Create a new, empty IPv4 address.
@@ -245,6 +250,11 @@ operator << (std::ostream &stream, const ipv4_addr_t &ip);
 class ipv6_addr_t
 {
 public:
+    /**
+     * The number of bits in an IPv6 address.
+     */
+
+    static const int bit_size = 128;
 
     /**
      * Create a new, empty IPv6 address.

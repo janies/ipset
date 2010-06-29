@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <boost/tuple/tuple.hpp>
+#include <glog/logging.h>
 
 #include <ip/bdd/cache.hh>
 
@@ -294,7 +295,13 @@ public:
         // are the same, since the nonterminal would be redundant.
 
         if (low == high)
+        {
+            DVLOG(3) << "Skipping nonterminal("
+                     << variable << ','
+                     << low << ','
+                     << high << ')';
             return low;
+        }
 
         return _nonterminals(variable, low, high);
     }

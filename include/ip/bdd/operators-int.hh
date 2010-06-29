@@ -12,6 +12,8 @@
 #define IP__BDD_OPERATORS_INT_HH
 
 
+#include <glog/logging.h>
+
 #include <ip/bdd/operators.hh>
 
 
@@ -59,6 +61,9 @@ node_id_t
 binary_operator<Operator>::call
 (node_id_t lhs, node_id_t rhs)
 {
+    DVLOG(2) << "Applying " << operator_name<Operator>::op_name()
+             << " to " << lhs << " and " << rhs;
+
     if (lhs >= 0)
     {
         if (rhs >= 0)
