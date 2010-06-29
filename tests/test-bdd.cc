@@ -312,6 +312,37 @@ TEST(BDD_Or_Evaluate_1)
 
 
 //--------------------------------------------------------------------
+// Memory size
+
+TEST(BDD_Size_1)
+{
+    std::cerr << "Starting BDD_Size_1 test case." << std::endl;
+
+    // Create a BDD representing
+    //   f(x) = (x[0] ∧ x[1]) ∨ (¬x[0] ∧ x[2])
+
+    bool_engine_t  engine;
+
+    node_id_t  n_false = engine.false_node();
+    node_id_t  n_true = engine.true_node();
+
+    node_id_t  t0 = engine.nonterminal(0, n_false, n_true);
+    node_id_t  f0 = engine.nonterminal(0, n_true, n_false);
+    node_id_t  t1 = engine.nonterminal(1, n_false, n_true);
+    node_id_t  t2 = engine.nonterminal(2, n_false, n_true);
+
+    node_id_t  n1 = engine.apply_and(t0, t1);
+    node_id_t  n2 = engine.apply_and(f0, t2);
+    node_id_t  node = engine.apply_or(n1, n2);
+
+    // And verify how big it is.
+
+    CHECK_EQUAL(3u, engine.reachable_node_count(node));
+    CHECK_EQUAL(3u * sizeof(node_t), engine.memory_size(node));
+}
+
+
+//--------------------------------------------------------------------
 // Boilerplate
 
 int main(int argc, char **argv)

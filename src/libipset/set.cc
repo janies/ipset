@@ -304,6 +304,13 @@ set_t::contains_ipv6(const boost::uint8_t *addr)
 }
 
 
+size_t
+set_t::memory_size() const
+{
+    return engine.memory_size(bdd);
+}
+
+
 std::ostream &
 operator << (std::ostream &stream, const set_t &set)
 {

@@ -80,6 +80,28 @@ public:
     }
 
     /**
+     * Return the number of nodes that are reachable from the given
+     * node.  This does not include duplicates if a node is reachable
+     * via more than one path.
+     */
+
+    size_t
+    reachable_node_count(node_id_t id) const
+    {
+        return _cache.reachable_node_count(id);
+    }
+
+    /**
+     * Return the amount of memory used by the nodes in the given BDD.
+     */
+
+    size_t
+    memory_size(node_id_t id) const
+    {
+        return _cache.memory_size(id);
+    }
+
+    /**
      * Evaluate a BDD given a particular variable assignment.  The
      * variable assignment should a vector-like class whose elements
      * can be cast to bools.  It should contain enough elements for

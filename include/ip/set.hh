@@ -286,6 +286,13 @@ public:
             (static_cast<const boost::uint8_t *>(addr));
     }
 
+    /**
+     * Return the amount of memory used by this set.
+     */
+
+    size_t
+    memory_size() const;
+
 
     friend
     std::ostream &
