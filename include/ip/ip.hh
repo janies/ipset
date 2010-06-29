@@ -12,6 +12,7 @@
 #define IP__IP_HH
 
 
+#include <cstring>
 #include <ostream>
 
 #include <boost/cstdint.hpp>
@@ -49,6 +50,17 @@ public:
     ipv4_addr_t():
         values(0)
     {
+    }
+
+    /**
+     * Create a new IPv4 address from a raw data buffer.  The address
+     * is expected to be in network-endian (i.e., big-endian) order.
+     */
+
+    ipv4_addr_t(const boost::uint8_t *buf):
+        values(0)
+    {
+        std::memcpy(&values, buf, sizeof(values));
     }
 
     /**
@@ -214,6 +226,9 @@ private:
 };
 
 
+void
+print_ipv4(std::ostream &stream, const boost::uint8_t *addr);
+
 std::ostream &
 operator << (std::ostream &stream, const ipv4_addr_t &ip);
 
@@ -238,6 +253,17 @@ public:
     ipv6_addr_t():
         values()
     {
+    }
+
+    /**
+     * Create a new IPv6 address from a raw data buffer.  The address
+     * is expected to be in network-endian (i.e., big-endian) order.
+     */
+
+    ipv6_addr_t(const boost::uint8_t *buf):
+        values()
+    {
+        std::memcpy(&values, buf, sizeof(values));
     }
 
     /**
@@ -454,6 +480,9 @@ private:
 
 };
 
+
+void
+print_ipv6(std::ostream &stream, const boost::uint8_t *addr);
 
 std::ostream &
 operator << (std::ostream &stream, const ipv6_addr_t &ip);

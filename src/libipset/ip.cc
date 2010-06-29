@@ -21,13 +21,21 @@
 namespace ip {
 
 
+void
+print_ipv4(std::ostream &stream, const boost::uint8_t *addr)
+{
+    stream << (int) addr[0] << "."
+           << (int) addr[1] << "."
+           << (int) addr[2] << "."
+           << (int) addr[3];
+}
+
+
 std::ostream &
 operator << (std::ostream &stream, const ipv4_addr_t &ip)
 {
-    return stream << (int) ip.octet(0) << "."
-                  << (int) ip.octet(1) << "."
-                  << (int) ip.octet(2) << "."
-                  << (int) ip.octet(3);
+    print_ipv4(stream, static_cast<const boost::uint8_t *>(ip));
+    return stream;
 }
 
 
@@ -39,11 +47,9 @@ operator << (std::ostream &stream, const ipv4_addr_t &ip)
 #define NS_IN6ADDRSZ  16
 #define NS_INT16SZ     2
 
-std::ostream &
-operator << (std::ostream &stream, const ipv6_addr_t &ip)
+void
+print_ipv6(std::ostream &stream, const boost::uint8_t *src)
 {
-    const unsigned char  *src = ip.values.u8;
-
     /*
      * Note that int32_t and int16_t need only be "at least" large enough
      * to contain a value of the specified size.  On some systems, like
@@ -127,14 +133,22 @@ operator << (std::ostream &stream, const ipv6_addr_t &ip)
 
     if (ipv4_encapsulated)
     {
-        return stream << tmp
-                      << (int) ip.octet(12) << "."
-                      << (int) ip.octet(13) << "."
-                      << (int) ip.octet(14) << "."
-                      << (int) ip.octet(15);
+        stream << tmp
+               << (int) src[12] << "."
+               << (int) src[13] << "."
+               << (int) src[14] << "."
+               << (int) src[15];
     } else {
-        return stream << tmp;
+        stream << tmp;
     }
+}
+
+
+std::ostream &
+operator << (std::ostream &stream, const ipv6_addr_t &ip)
+{
+    print_ipv6(stream, static_cast<const boost::uint8_t *>(ip));
+    return stream;
 }
 
 
