@@ -28,5 +28,16 @@ operator << (std::ostream &stream, const node_t &node)
 }
 
 
+node_id_t
+node_cache_t::nonterminal_creator::call
+(variable_t variable, node_id_t low, node_id_t high)
+{
+    node_t  node(variable, low, high);
+    node_id_t  new_id = index_to_node_id(_nodes.size());
+    _nodes.push_back(node);
+    return new_id;
+}
+
+
 } // namespace bdd
 } // namespace ip

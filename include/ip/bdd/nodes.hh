@@ -252,13 +252,7 @@ private:
         }
 
         node_id_t
-        call(variable_t variable, node_id_t low, node_id_t high)
-        {
-            node_t  node(variable, low, high);
-            node_id_t  new_id = index_to_node_id(_nodes.size());
-            _nodes.push_back(node);
-            return new_id;
-        }
+        call(variable_t variable, node_id_t low, node_id_t high);
     };
 
     /**
