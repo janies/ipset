@@ -29,6 +29,8 @@ using namespace ip::bdd;
 
 TEST(BDD_False_Terminal)
 {
+    std::cerr << "Starting BDD_False_Terminal test case." << std::endl;
+
     node_cache_t  cache;
 
     node_id_t  n_false = cache.terminal(false);
