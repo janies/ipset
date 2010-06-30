@@ -262,6 +262,19 @@ private:
 
     nonterminal_creator  _nonterminals;
 
+    /**
+     * A helper method for the save() method.  Outputs a nonterminal
+     * node in a BDD tree, if we haven't done so already.  Ensures
+     * that the children of the nonterminal are output before the
+     * nonterminal is.
+     */
+
+    node_id_t
+    save_visit_node(std::ostream &stream,
+                    std::vector<node_id_t> &serialized_ids,
+                    node_id_t &next_serialized_id,
+                    node_id_t id) const;
+
 public:
     /**
      * Create a new, empty node cache.
@@ -335,6 +348,14 @@ public:
     {
         return reachable_node_count(id) * sizeof(node_t);
     }
+
+    /**
+     * Persist a BDD to an output stream.  This encodes the set using
+     * only those nodes that are reachable from the BDD's root node.
+     */
+
+    void
+    save(std::ostream &stream, node_id_t id) const;
 
     /**
      * Evaluate a BDD given a particular variable assignment.  The

@@ -311,6 +311,13 @@ set_t::memory_size() const
 }
 
 
+void
+set_t::save(std::ostream &stream) const
+{
+    engine.save(stream, bdd);
+}
+
+
 std::ostream &
 operator << (std::ostream &stream, const set_t &set)
 {

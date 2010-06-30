@@ -293,6 +293,13 @@ public:
     size_t
     memory_size() const;
 
+    /**
+     * Persist an IP set to an output stream.
+     */
+
+    void
+    save(std::ostream &stream) const;
+
 
     friend
     std::ostream &

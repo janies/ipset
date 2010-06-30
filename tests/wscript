@@ -40,4 +40,5 @@ def build(bld):
     make_test("test-endianness")
     make_test("test-ip")
     make_test("test-set")
+    make_test("test-set-io")
     make_test("test-utils")

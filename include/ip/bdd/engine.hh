@@ -102,6 +102,17 @@ public:
     }
 
     /**
+     * Persist a BDD to an output stream.  This encodes the set using
+     * only those nodes that are reachable from the BDD's root node.
+     */
+
+    void
+    save(std::ostream &stream, node_id_t id) const
+    {
+        _cache.save(stream, id);
+    }
+
+    /**
      * Evaluate a BDD given a particular variable assignment.  The
      * variable assignment should a vector-like class whose elements
      * can be cast to bools.  It should contain enough elements for

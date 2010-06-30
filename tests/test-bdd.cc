@@ -18,6 +18,7 @@
 #undef CHECK
 #include <UnitTest++.h>
 
+#include <ip/utils.hh>
 #include <ip/bdd/engine.hh>
 #include <ip/bdd/nodes.hh>
 
@@ -339,6 +340,91 @@ TEST(BDD_Size_1)
 
     CHECK_EQUAL(3u, engine.reachable_node_count(node));
     CHECK_EQUAL(3u * sizeof(node_t), engine.memory_size(node));
+}
+
+
+//--------------------------------------------------------------------
+// Serialization
+
+TEST(BDD_Save_1)
+{
+    std::cerr << "Starting BDD_Save_1 test case." << std::endl;
+
+    // Create a BDD representing
+    //   f(x) = TRUE
+
+    bool_engine_t  engine;
+
+    node_id_t  node = engine.true_node();
+
+    // Serialize the BDD into a string stream.
+
+    std::ostringstream  ss;
+    engine.save(ss, node);
+
+    const char  *raw_expected =
+        "IP set"                             // magic number
+        "\x00\x01"                           // version
+        "\x00\x00\x00\x00\x00\x00\x00\x18"   // length
+        "\x00\x00\x00\x00"                   // node count
+        "\x00\x00\x00\x01"                   // terminal value
+        ;
+    const size_t  expected_length = 24;
+    const std::string  expected(raw_expected, expected_length);
+
+    CHECK_EQUAL(UnitTest::binary_string(expected),
+                UnitTest::binary_string(ss.str()));
+}
+
+TEST(BDD_Save_2)
+{
+    std::cerr << "Starting BDD_Save_2 test case." << std::endl;
+
+    // Create a BDD representing
+    //   f(x) = (x[0] ∧ x[1]) ∨ (¬x[0] ∧ x[2])
+
+    bool_engine_t  engine;
+
+    node_id_t  n_false = engine.false_node();
+    node_id_t  n_true = engine.true_node();
+
+    node_id_t  t0 = engine.nonterminal(0, n_false, n_true);
+    node_id_t  f0 = engine.nonterminal(0, n_true, n_false);
+    node_id_t  t1 = engine.nonterminal(1, n_false, n_true);
+    node_id_t  t2 = engine.nonterminal(2, n_false, n_true);
+
+    node_id_t  n1 = engine.apply_and(t0, t1);
+    node_id_t  n2 = engine.apply_and(f0, t2);
+    node_id_t  node = engine.apply_or(n1, n2);
+
+    // Serialize the BDD into a string stream.
+
+    std::ostringstream  ss;
+    engine.save(ss, node);
+
+    const char  *raw_expected =
+        "IP set"                             // magic number
+        "\x00\x01"                           // version
+        "\x00\x00\x00\x00\x00\x00\x00\x2f"   // length
+        "\x00\x00\x00\x03"                   // node count
+        // node -1
+        "\x02"                               // variable
+        "\x00\x00\x00\x00"                   // low
+        "\x00\x00\x00\x01"                   // high
+        // node -2
+        "\x01"                               // variable
+        "\x00\x00\x00\x00"                   // low
+        "\x00\x00\x00\x01"                   // high
+        // node -3
+        "\x00"                               // variable
+        "\xff\xff\xff\xff"                   // low
+        "\xff\xff\xff\xfe"                   // high
+        ;
+    const size_t  expected_length = 47;
+    const std::string  expected(raw_expected, expected_length);
+
+    CHECK_EQUAL(UnitTest::binary_string(expected),
+                UnitTest::binary_string(ss.str()));
 }
 
 
