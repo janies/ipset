@@ -1,11 +1,64 @@
 #ifndef UNITTEST_CHECKS_H
 #define UNITTEST_CHECKS_H
 
+#include <iomanip>
+#include <ostream>
+#include <string>
+
 #include "Config.h"
 #include "TestResults.h"
 #include "MemoryOutStream.h"
 
 namespace UnitTest {
+
+
+/**
+ * A wrapper class around a std::string that outputs as a hexdump.
+ * Useful for comparing binary data in unit tests.
+ */
+
+struct binary_string
+{
+    const std::string  &str;
+
+    binary_string(const std::string &str_): str(str_) { }
+
+    bool
+    operator == (const binary_string &other) const
+    {
+        return (str == other.str);
+    }
+
+    bool
+    operator == (const std::string &other) const
+    {
+        return (str == other);
+    }
+};
+
+std::ostream &
+operator << (std::ostream &stream, const binary_string &bin)
+{
+    bool comma_needed = false;
+
+    stream << std::dec << bin.str.length() << ":[";
+
+    for (unsigned int i = 0; i < bin.str.length(); i++)
+    {
+        if (comma_needed)
+            stream << ',';
+        else
+            comma_needed = true;
+
+        stream << std::hex
+               << std::setfill('0')
+               << std::setw(2)
+               << (int) (unsigned char) bin.str[i];
+    }
+
+    stream << ']';
+    return stream;
+}
 
 
 template< typename Value >
