@@ -311,6 +311,13 @@ set_t::memory_size() const
 }
 
 
+bool
+set_t::load(std::istream &stream)
+{
+    return engine.load(stream, bdd);
+}
+
+
 void
 set_t::save(std::ostream &stream) const
 {

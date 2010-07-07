@@ -263,6 +263,13 @@ private:
     nonterminal_creator  _nonterminals;
 
     /**
+     * A helper method for reading a version 1 IP set stream.
+     */
+
+    bool
+    load_v1(std::istream &stream, node_id_t &id);
+
+    /**
      * A helper method for the save() method.  Outputs a nonterminal
      * node in a BDD tree, if we haven't done so already.  Ensures
      * that the children of the nonterminal are output before the
@@ -348,6 +355,13 @@ public:
     {
         return reachable_node_count(id) * sizeof(node_t);
     }
+
+    /**
+     * Load a BDD from an input stream.
+     */
+
+    bool
+    load(std::istream &stream, node_id_t &id);
 
     /**
      * Persist a BDD to an output stream.  This encodes the set using

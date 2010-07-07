@@ -12,6 +12,9 @@
 #define IP__SET_HH
 
 
+#include <istream>
+#include <ostream>
+
 #include <boost/cstdint.hpp>
 
 #include <ip/ip.hh>
@@ -292,6 +295,14 @@ public:
 
     size_t
     memory_size() const;
+
+    /**
+     * Load an IP set from an input stream.  This replaces the
+     * contents of the current set.
+     */
+
+    bool
+    load(std::istream &stream);
 
     /**
      * Persist an IP set to an output stream.

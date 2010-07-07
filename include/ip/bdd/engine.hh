@@ -13,6 +13,8 @@
 
 
 #include <functional>
+#include <istream>
+#include <ostream>
 
 #include <boost/tuple/tuple.hpp>
 
@@ -99,6 +101,16 @@ public:
     memory_size(node_id_t id) const
     {
         return _cache.memory_size(id);
+    }
+
+    /**
+     * Load a BDD from an input stream.
+     */
+
+    bool
+    load(std::istream &stream, node_id_t &id)
+    {
+        return _cache.load(stream, id);
     }
 
     /**
