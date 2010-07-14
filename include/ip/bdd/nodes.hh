@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include <boost/dynamic_bitset.hpp>
 #include <boost/logic/tribool.hpp>
 #include <glog/logging.h>
 
@@ -190,6 +191,234 @@ public:
         } else {
             return boost::logic::indeterminate;
         }
+    }
+
+    /**
+     * An iterator for expanding a variable assignment.  For each
+     * variable that's indeterminate in the assignment, the iterator
+     * yields a result with both values.
+     */
+
+    struct iterator
+    {
+    private:
+        /**
+         * Whether there are any more assignments in this iterator.
+         */
+
+        bool  finished;
+
+    public:
+        /**
+         * The result of the iterator is an assignment of values, but
+         * since there won't be any indeterminates in the expanded
+         * assignment, we can use a bitset instead of a vector of
+         * tribools.
+         */
+
+        typedef boost::dynamic_bitset<>  value_t;
+
+    private:
+        /**
+         * The values in the current expanded assignment.
+         */
+
+        value_t  values;
+
+        /**
+         * A vector containing all of the variables that are
+         * indeterminate in the original assignment.
+         */
+
+        std::vector<variable_t>  indeterminates;
+
+        /**
+         * Advance to the next expanded assignment.  Sets finished to
+         * true if there are no more expansions; otherwise fills in
+         * values for the next expansion.
+         */
+
+        void advance();
+
+        /**
+         * Fill in values and indeterminates for an assignment.
+         */
+
+        void initialize(const assignment_t &assignment,
+                        variable_t last_var);
+
+    public:
+        /**
+         * Create a new iterator that points past the end of the
+         * expanded assignment.
+         */
+
+        iterator():
+            finished(true),
+            values(),
+            indeterminates()
+        {
+        }
+
+        /**
+         * Create a new iterator for the given assignment, ensuring
+         * that all variables up through the specified one are given
+         * concrete values.
+         */
+
+        iterator(const assignment_t &assignment, variable_t last_var):
+            finished(false),
+            values(last_var),
+            indeterminates()
+        {
+            initialize(assignment, last_var);
+        }
+
+        /**
+         * Copy construct an iterator.
+         */
+
+        iterator(const iterator &other):
+            finished(other.finished),
+            values(other.values),
+            indeterminates(other.indeterminates)
+        {
+        }
+
+        /**
+         * Copy an iterator.
+         */
+
+        iterator &
+        operator = (const iterator &other)
+        {
+            finished = other.finished;
+            values = other.values;
+            indeterminates = other.indeterminates;
+
+            return (*this);
+        }
+
+        /**
+         * Compare two iterators for equality.
+         */
+
+        bool
+        operator == (const iterator &other) const
+        {
+            // If either iterator is finished, then the other must be,
+            // too.
+
+            if (finished || other.finished)
+                return (finished && other.finished);
+
+            // Otherwise, comparing the values and indeterminates is
+            // enough.
+
+            return
+                (values == other.values) &&
+                (indeterminates == other.indeterminates);
+        }
+
+        /**
+         * Compare two pointers for inequality.
+         */
+
+        bool
+        operator != (const iterator &other) const
+        {
+            return !(this->operator == (other));
+        }
+
+        /**
+         * Dereference the iterator, returning the assignment and
+         * terminal value of the current path.
+         */
+
+        const value_t &
+        operator * () const
+        {
+            return values;
+        }
+
+        /**
+         * Dereference the iterator, returning the assignment and
+         * terminal value of the current path.
+         */
+
+        value_t &
+        operator * ()
+        {
+            return values;
+        }
+
+        /**
+         * Dereference the iterator, returning the assignment and
+         * terminal value of the current path.
+         */
+
+        const value_t *
+        operator -> () const
+        {
+            return &values;
+        }
+
+        /**
+         * Dereference the iterator, returning the assignment and
+         * terminal value of the current path.
+         */
+
+        value_t *
+        operator -> ()
+        {
+            return &values;
+        }
+
+        /**
+         * Advance the iterator to the next assignment.
+         */
+
+        iterator &
+        operator ++ ()
+        {
+            advance();
+            return (*this);
+        }
+
+        /**
+         * Advance the iterator to the next assignment.
+         */
+
+        iterator
+        operator ++ (int dummy)
+        {
+            iterator  saved(*this);
+            advance();
+            return saved;
+        }
+    };
+
+
+    /**
+     * Return an iterator that expands a variable assignment.  For
+     * each variable that's indeterminate in the assignment, the
+     * iterator yields a result with both values.
+     */
+
+    iterator begin(variable_t last_var) const
+    {
+        return iterator(*this, last_var);
+    }
+
+
+    /**
+     * Return an iterator that points past the end of any expanded
+     * assignments.
+     */
+
+    iterator end() const
+    {
+        return iterator();
     }
 
 

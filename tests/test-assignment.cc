@@ -12,6 +12,7 @@
 #include <iostream>
 #include <sstream>
 
+#include <boost/dynamic_bitset.hpp>
 #include <boost/logic/tribool.hpp>
 
 // Both of the following try to define CHECK.  We want the one from
@@ -91,6 +92,84 @@ TEST(BDD_Assignment_Cut_1)
     a2.cut(2);
 
     CHECK_EQUAL(a1, a2);
+}
+
+
+//--------------------------------------------------------------------
+// Expanded assignments
+
+TEST(BDD_Assignment_Expand_1)
+{
+    std::cerr << "Starting BDD_Assignment_Expand_1 test case." << std::endl;
+
+    assignment_t  a;
+
+    a[0] = true;
+    a[1] = false;
+
+    assignment_t::iterator  it = a.begin(2);
+    boost::dynamic_bitset<>  ea(2);
+
+    ea[0] = true;
+    ea[1] = false;
+    CHECK_EQUAL(ea, *it);
+
+    ++it;
+    CHECK(it == a.end());
+}
+
+TEST(BDD_Assignment_Expand_2)
+{
+    std::cerr << "Starting BDD_Assignment_Expand_2 test case." << std::endl;
+
+    assignment_t  a;
+
+    a[0] = true;
+    a[1] = false;
+
+    assignment_t::iterator  it = a.begin(3);
+    boost::dynamic_bitset<>  ea(3);
+
+    ea[0] = true;
+    ea[1] = false;
+    ea[2] = false;
+    CHECK_EQUAL(ea, *it);
+
+    ++it;
+    ea[0] = true;
+    ea[1] = false;
+    ea[2] = true;
+    CHECK_EQUAL(ea, *it);
+
+    ++it;
+    CHECK(it == a.end());
+}
+
+TEST(BDD_Assignment_Expand_3)
+{
+    std::cerr << "Starting BDD_Assignment_Expand_3 test case." << std::endl;
+
+    assignment_t  a;
+
+    a[0] = true;
+    a[2] = false;
+
+    assignment_t::iterator  it = a.begin(3);
+    boost::dynamic_bitset<>  ea(3);
+
+    ea[0] = true;
+    ea[1] = false;
+    ea[2] = false;
+    CHECK_EQUAL(ea, *it);
+
+    ++it;
+    ea[0] = true;
+    ea[1] = true;
+    ea[2] = false;
+    CHECK_EQUAL(ea, *it);
+
+    ++it;
+    CHECK(it == a.end());
 }
 
 

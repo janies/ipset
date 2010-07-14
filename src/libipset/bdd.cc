@@ -192,5 +192,81 @@ void node_cache_t::iterator::add_node(node_id_t id)
 }
 
 
+void assignment_t::iterator::advance()
+{
+    // If we're already at the end of the iterator, don't do anything.
+
+    if (finished)
+        return;
+
+    // Look at the last indeterminate bit in the assignment.  If it's
+    // 0, then set it to 1 and return.  Otherwise we set it to 0 and
+    // carry up to the previous indeterminate bit.
+
+    for (std::vector<variable_t>::reverse_iterator  it =
+             indeterminates.rbegin();
+         it != indeterminates.rend(); ++it)
+    {
+        if (!values[*it])
+        {
+            // This variable is currently FALSE, so set it to TRUE and
+            // return.
+
+            values[*it] = true;
+            return;
+        } else {
+            // Otherwise, set this variable back to FALSE and carry.
+
+            values[*it] = false;
+        }
+    }
+
+    // If we fall through then we've made it through all of the
+    // expanded assignments.
+
+    finished = true;
+}
+
+
+void
+assignment_t::iterator::initialize
+(const assignment_t &assignment, variable_t last_var)
+{
+    // First loop through all of the variables in the assignment
+    // vector, making sure not to go further than the caller
+    // requested.
+
+    variable_t  last_assignment = assignment.values.size();
+    if (last_var < last_assignment)
+        last_assignment = last_var;
+
+    for (variable_t  var = 0; var < last_assignment; var++)
+    {
+        if (boost::logic::indeterminate(assignment.values[var]))
+        {
+            // If this variable is indeterminate, start it off as
+            // FALSE, and add it to the indeterminate list.
+
+            values[var] = false;
+            indeterminates.push_back(var);
+        } else {
+            // Otherwise set the variable to the same value in the
+            // expanded assignment as it is in the non-expanded one.
+
+            values[var] = assignment.values[var];
+        }
+    }
+
+    // If the caller requested more variables than there are in the
+    // assignment vector, add them to the indeterminate list.
+
+    for (variable_t  var = last_assignment; var < last_var; var++)
+    {
+        indeterminates.push_back(var);
+    }
+}
+
+
+
 } // namespace bdd
 } // namespace ip
