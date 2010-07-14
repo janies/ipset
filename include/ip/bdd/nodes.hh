@@ -23,6 +23,7 @@
 #include <ostream>
 #include <vector>
 
+#include <boost/logic/tribool.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <glog/logging.h>
 
@@ -58,6 +59,137 @@ typedef int  range_t;
  */
 
 typedef int  node_id_t;
+
+
+/**
+ * An assignment is a mapping of variable numbers to Boolean values.
+ * The usual interpretation is that a Boolean function evaluates to
+ * some particular value (such as TRUE) when the variables are
+ * assigned according to the assignment.  A variable can be mapped to
+ * an “indeterminate” value if that variable can be either TRUE or
+ * FALSE in this assignment without affecting the result of the
+ * function.
+ */
+
+class assignment_t
+{
+public:
+    /**
+     * The underlying variable assignments are stored in a vector of
+     * tribools.  Every variable that has a TRUE or FALSE value must
+     * appear in the vector.  Variables that are indeterminite must
+     * only appear to prevent gaps in the vector.  Any variables
+     * outside the range of the vector are assumed to be
+     * indeterminite.
+     */
+
+    typedef std::vector<boost::logic::tribool>  value_list_t;
+
+private:
+    /**
+     * The underlying variable assignments.
+     */
+
+    value_list_t  values;
+
+public:
+    /**
+     * Create an assignment where all variables are indeterminite.
+     */
+
+    assignment_t():
+        values()
+    {
+    }
+
+    /**
+     * Create a copy of another assignment.
+     */
+
+    assignment_t(const assignment_t &other):
+        values(other.values)
+    {
+    }
+
+    /**
+     * Assign another assignment into this one.
+     */
+
+    assignment_t &
+    operator = (const assignment_t &other)
+    {
+        values = other.values;
+        return (*this);
+    }
+
+    /**
+     * Compare two assignments for equality.
+     */
+
+    bool
+    operator == (const assignment_t &other) const;
+
+    /**
+     * Compare two assignments for inequality.
+     */
+
+    bool
+    operator != (const assignment_t &other) const;
+
+    /**
+     * Set the given variable, and all higher variables, to the
+     * indeterminate value.
+     */
+
+    void
+    cut(variable_t var)
+    {
+        if (var < values.size())
+            values.resize(var);
+    }
+
+    /**
+     * Set the value assigned to a particular variable.
+     */
+
+    boost::logic::tribool &
+    operator [] (variable_t var)
+    {
+        // Ensure that the vector is big enough to hold this variable
+        // assignment, inserting new indeterminates if needed.
+
+        if (var >= values.size())
+        {
+            values.resize(var + 1, boost::logic::indeterminate);
+        }
+
+        return values[var];
+    }
+
+    /**
+     * Return the value assigned to a particular variable.
+     */
+
+    boost::logic::tribool
+    operator [] (variable_t var) const
+    {
+        if (var < values.size())
+        {
+            return values[var];
+        } else {
+            return boost::logic::indeterminate;
+        }
+    }
+
+
+    friend
+    std::ostream &
+    operator << (std::ostream &stream, const assignment_t &assignment);
+};
+
+
+std::ostream &
+operator << (std::ostream &stream, const assignment_t &assignment);
 
 
 /**
