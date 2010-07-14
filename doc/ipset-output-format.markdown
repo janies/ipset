@@ -14,6 +14,13 @@ that bit is set in the IP address.  You then plug those variables into
 the formula: if the result is `TRUE`, the address is in the set; if
 it's `FALSE`, it's not in the set.
 
+To handle both IPv4 and IPv6 addresses, we use an initial variable
+(variable 0) that indicates whether a particular address is IPv4 or
+IPv6; we use `TRUE` for IPv4 and `FALSE` for IPv6.  IPv4 addresses
+then use variables 1-32 for each bit in the address, while IPv6
+addresses use variables 1-128.  (We can reuse the variables like this
+since we've got variable 0 discriminating the two types of address.)
+
 A BDD encodes a Boolean formula as a binary search tree.  There are
 two kinds of nodes: _terminal_ nodes, which are the leaves of the
 tree, and _nonterminal_ nodes.  A terminal node is labeled with a
@@ -38,10 +45,10 @@ must be less than the variable numbers of its children.
 All of this has ramifications on the storage format, since we're
 storing the BDD structure of a set.  To store a BDD, we only need two
 basic low-level storage elements: a _variable index_, and a _node ID_.
-Since an IP set can store both IPv4 and IPv6 addresses, we need 160
-total variables: 32 for the bits of an IPv4 address, and 128 for the
-bits of an IPv6 address.  Node IDs are references to the nodes in the
-BDD.
+Since an IP set can store both IPv4 and IPv6 addresses, we need 129
+total variables: variable 0 to determine which kind of address, and
+variables 1-128 to store the bits of the address.  Node IDs are
+references to the nodes in the BDD.
 
 A terminal node has an ID ≥ 0.  We don't explicitly store terminal
 nodes in the storage stream; instead, the node ID of a terminal node
@@ -122,7 +129,8 @@ structure starts with an 8-bit variable index:
     | VI |
     +----+
 
-Variables 0-31 represent the bits of an IPv4 address; variables 32-159
+Variable 0 determines whether a particular address is IPv4 or IPv6.
+Variables 1-32 represent the bits of an IPv4 address; variables 1-128
 represent the bits of an IPv6 address.  (The bits of an address are
 numbered in big-endian byte order, and from MSB to LSB within each
 byte.)

@@ -33,24 +33,28 @@ class set_t
 private:
     /**
      * Return the BDD variable number for the given bit of an IPv4
-     * address.
+     * address.  IPv4 addresses use variables 1-32.  (Variable 0 is
+     * used to identify the kind of address — TRUE for IPv4, FALSE for
+     * IPv6.)
      */
 
     static ip::bdd::variable_t
     ipv4_var(int index)
     {
-        return index;
+        return index + 1;
     }
 
     /**
      * Return the BDD variable number for the given bit of an IPv6
-     * address.
+     * address.  IPv6 addresses use variables 1-128.  (Variable 0 is
+     * used to identify the kind of address — TRUE for IPv4, FALSE for
+     * IPv6.)
      */
 
     static ip::bdd::variable_t
     ipv6_var(int index)
     {
-        return index + ipv4_addr_t::bit_size;
+        return index + 1;
     }
 
     /**
@@ -60,7 +64,7 @@ private:
     static int
     ipv4_index(ip::bdd::variable_t var)
     {
-        return var;
+        return var - 1;
     }
 
     /**
@@ -70,7 +74,7 @@ private:
     static int
     ipv6_index(ip::bdd::variable_t var)
     {
-        return var - ipv4_addr_t::bit_size;
+        return var - 1;
     }
 
     /**
@@ -97,7 +101,7 @@ private:
      */
 
     ip::bdd::node_id_t
-    create_ipv4_bdd(const boost::uint8_t *addr, int netmask);
+    create_ipv4_bdd(const boost::uint8_t *addr, unsigned int netmask);
 
     /**
      * Create a BDD for an IPv6 address or family of IP addresses.
@@ -109,7 +113,7 @@ private:
      */
 
     ip::bdd::node_id_t
-    create_ipv6_bdd(const boost::uint8_t *addr, int netmask);
+    create_ipv6_bdd(const boost::uint8_t *addr, unsigned int netmask);
 
     /**
      * The BDD node that represents this set.
@@ -199,7 +203,7 @@ public:
 
     bool
     add_ipv4(const boost::uint8_t *addr,
-             int netmask = ipv4_addr_t::bit_size);
+             unsigned int netmask = ipv4_addr_t::bit_size);
 
     /**
      * Add an IPv4 address or network to an IP set, based on an
@@ -211,7 +215,7 @@ public:
 
     bool
     add(const ipv4_addr_t &addr,
-        int netmask = ipv4_addr_t::bit_size)
+        unsigned int netmask = ipv4_addr_t::bit_size)
     {
         return add_ipv4
             (static_cast<const boost::uint8_t *>(addr), netmask);
@@ -229,7 +233,7 @@ public:
 
     bool
     add_ipv6(const boost::uint8_t *addr,
-             int netmask = ipv6_addr_t::bit_size);
+             unsigned int netmask = ipv6_addr_t::bit_size);
 
     /**
      * Add an IPv6 address or network to an IP set, based on an
@@ -241,7 +245,7 @@ public:
 
     bool
     add(const ipv6_addr_t &addr,
-        int netmask = ipv6_addr_t::bit_size)
+        unsigned int netmask = ipv6_addr_t::bit_size)
     {
         return add_ipv6
             (static_cast<const boost::uint8_t *>(addr), netmask);

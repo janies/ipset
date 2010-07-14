@@ -64,6 +64,36 @@ TEST(IP_Set_v4_v6_Distinct)
     CHECK(s1 != s2);
 }
 
+TEST(IP_Set_v4_v6_Contains_1)
+{
+    std::cerr << "Starting IP_Set_v4_v6_Contains_1 test case." << std::endl;
+
+    set_t  s1;
+
+    ipv4_addr_t  a1(192,168,0,1);
+    ipv6_addr_t  a2(0xfe80,0,0,0,0,0,0,1);
+
+    s1.add(a1);
+
+    CHECK(s1.contains(a1));
+    CHECK(!s1.contains(a2));
+}
+
+TEST(IP_Set_v4_v6_Contains_2)
+{
+    std::cerr << "Starting IP_Set_v4_v6_Contains_2 test case." << std::endl;
+
+    set_t  s1;
+
+    ipv4_addr_t  a1(0,0,0,0);
+    ipv6_addr_t  a2(0xfe80,0,0,0,0,0,0,1);
+
+    s1.add(a1);
+
+    CHECK(s1.contains(a1));
+    CHECK(!s1.contains(a2));
+}
+
 
 //--------------------------------------------------------------------
 // IPv4 sets
@@ -101,7 +131,7 @@ TEST(IPv4_Set_Size_1)
 
     s1.add(a1);
 
-    CHECK_EQUAL(384u, s1.memory_size());
+    CHECK_EQUAL(396u, s1.memory_size());
 }
 
 TEST(IPv4_Set_Size_Net_1)
@@ -113,7 +143,7 @@ TEST(IPv4_Set_Size_Net_1)
 
     s1.add(a1, 16);
 
-    CHECK_EQUAL(192u, s1.memory_size());
+    CHECK_EQUAL(204u, s1.memory_size());
 }
 
 TEST(IPv4_Set_Size_2)
@@ -127,7 +157,7 @@ TEST(IPv4_Set_Size_2)
     s1.add(a1);
     s1.add(a2);
 
-    CHECK_EQUAL(756u, s1.memory_size());
+    CHECK_EQUAL(768u, s1.memory_size());
 }
 
 TEST(IPv4_Set_Size_Net_2)
@@ -141,7 +171,7 @@ TEST(IPv4_Set_Size_Net_2)
     s1.add(a1, 16);
     s1.add(a2, 16);
 
-    CHECK_EQUAL(336u, s1.memory_size());
+    CHECK_EQUAL(348u, s1.memory_size());
 }
 
 TEST(IPv4_Set_Contains_1)
@@ -331,7 +361,7 @@ TEST(IPv6_Set_Size_1)
 
     s1.add(a1);
 
-    CHECK_EQUAL(1536u, s1.memory_size());
+    CHECK_EQUAL(1548u, s1.memory_size());
 }
 
 TEST(IPv6_Set_Size_Net_1)
@@ -343,7 +373,7 @@ TEST(IPv6_Set_Size_Net_1)
 
     s1.add(a1, 16);
 
-    CHECK_EQUAL(192u, s1.memory_size());
+    CHECK_EQUAL(204u, s1.memory_size());
 }
 
 TEST(IPv6_Set_Size_2)
@@ -357,7 +387,7 @@ TEST(IPv6_Set_Size_2)
     s1.add(a1);
     s1.add(a2);
 
-    CHECK_EQUAL(2832u, s1.memory_size());
+    CHECK_EQUAL(2844u, s1.memory_size());
 }
 
 TEST(IPv6_Set_Size_Net_2)
@@ -371,7 +401,7 @@ TEST(IPv6_Set_Size_Net_2)
     s1.add(a1, 16);
     s1.add(a2, 16);
 
-    CHECK_EQUAL(288u, s1.memory_size());
+    CHECK_EQUAL(300u, s1.memory_size());
 }
 
 TEST(IPv6_Set_Contains_1)

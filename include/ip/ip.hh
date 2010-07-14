@@ -46,7 +46,7 @@ public:
      * The number of bits in an IPv4 address.
      */
 
-    static const int bit_size = 32;
+    static const unsigned int  bit_size = 32;
 
     /**
      * Create a new, empty IPv4 address.
@@ -254,7 +254,7 @@ public:
      * The number of bits in an IPv6 address.
      */
 
-    static const int bit_size = 128;
+    static const unsigned int  bit_size = 128;
 
     /**
      * Create a new, empty IPv6 address.

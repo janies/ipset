@@ -60,12 +60,12 @@ get_bit(const boost::uint8_t *addr, int index)
 
 node_id_t
 set_t::create_ipv4_bdd
-(const boost::uint8_t *addr, int netmask)
+(const boost::uint8_t *addr, unsigned int netmask)
 {
     // Special case — the BDD for a netmask that's out of range never
     // evaluates to true.
 
-    if ((netmask <= 0) || (netmask > ipv4_addr_t::bit_size))
+    if (netmask > ipv4_addr_t::bit_size)
     {
         return engine.false_node();
     }
@@ -113,6 +113,12 @@ set_t::create_ipv4_bdd
         }
     }
 
+    // Lastly, we set variable 0 to TRUE to indicate that this is an
+    // IPv4 address.
+
+    DVLOG(4) << "Var 0 is set for IPv4";
+    result = engine.nonterminal(0, false_node, result);
+
     DVLOG(2) << "BDD is " << result;
 
     return result;
@@ -121,12 +127,12 @@ set_t::create_ipv4_bdd
 
 node_id_t
 set_t::create_ipv6_bdd
-(const boost::uint8_t *addr, int netmask)
+(const boost::uint8_t *addr, unsigned int netmask)
 {
     // Special case — the BDD for a netmask that's out of range never
     // evaluates to true.
 
-    if ((netmask <= 0) || (netmask > ipv6_addr_t::bit_size))
+    if (netmask > ipv6_addr_t::bit_size)
     {
         return engine.false_node();
     }
@@ -174,6 +180,12 @@ set_t::create_ipv6_bdd
         }
     }
 
+    // Lastly, we set variable 0 to FALSE to indicate that this is an
+    // IPv6 address.
+
+    DVLOG(4) << "Var 0 is NOT set for IPv6";
+    result = engine.nonterminal(0, result, false_node);
+
     DVLOG(2) << "BDD is " << result;
 
     return result;
@@ -181,7 +193,7 @@ set_t::create_ipv6_bdd
 
 
 bool
-set_t::add_ipv4(const boost::uint8_t *addr, int netmask)
+set_t::add_ipv4(const boost::uint8_t *addr, unsigned int netmask)
 {
     // First, construct the BDD that represents this IP address —
     // i.e., where each boolean variable is assigned TRUE or FALSE
@@ -211,7 +223,7 @@ set_t::add_ipv4(const boost::uint8_t *addr, int netmask)
 
 
 bool
-set_t::add_ipv6(const boost::uint8_t *addr, int netmask)
+set_t::add_ipv6(const boost::uint8_t *addr, unsigned int netmask)
 {
     // First, construct the BDD that represents this IP address —
     // i.e., where each boolean variable is assigned TRUE or FALSE
@@ -257,9 +269,15 @@ struct set_t::ipv4_var_indexed
     bool
     operator [] (ip::bdd::variable_t var) const
     {
-        DVLOG(4) << "Getting var " << var
-                 << " (bit " << ipv6_index(var) << ")";
-        return get_bit(buf, ipv4_index(var));
+        if (var == 0)
+        {
+            DVLOG(4) << "Getting var 0 (always TRUE for IPv4)";
+            return true;
+        } else {
+            DVLOG(4) << "Getting var " << var
+                     << " (bit " << ipv4_index(var) << ")";
+            return get_bit(buf, ipv4_index(var));
+        }
     }
 };
 
@@ -289,9 +307,15 @@ struct set_t::ipv6_var_indexed
     bool
     operator [] (ip::bdd::variable_t var) const
     {
-        DVLOG(4) << "Getting var " << var
-                 << " (bit " << ipv6_index(var) << ")";
-        return get_bit(buf, ipv6_index(var));
+        if (var == 0)
+        {
+            DVLOG(4) << "Getting var 0 (always FALSE for IPv6)";
+            return false;
+        } else {
+            DVLOG(4) << "Getting var " << var
+                     << " (bit " << ipv6_index(var) << ")";
+            return get_bit(buf, ipv6_index(var));
+        }
     }
 };
 
