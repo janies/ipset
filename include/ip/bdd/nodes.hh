@@ -21,10 +21,10 @@
 
 #include <map>
 #include <ostream>
+#include <utility>
 #include <vector>
 
 #include <boost/logic/tribool.hpp>
-#include <boost/tuple/tuple.hpp>
 #include <glog/logging.h>
 
 #include <ip/bdd/cache.hh>
@@ -146,6 +146,17 @@ public:
     {
         if (var < values.size())
             values.resize(var);
+    }
+
+    /**
+     * Clear the assignment, setting all variables to the
+     * indeterminate value.
+     */
+
+    void
+    clear()
+    {
+        values.clear();
     }
 
     /**
@@ -540,6 +551,274 @@ public:
         // Once we find a terminal node, we've got the final result.
 
         return node_id;
+    }
+
+    /**
+     * An iterator for walking through the assignments for a given
+     * node.
+     *
+     * The iterator walks through each path in the BDD tree, stopping
+     * at each terminal node.  Each time we reach a terminal node, we
+     * yield a new assignment_t object representing the assignment of
+     * variables along the current path.
+     *
+     * We maintain a stack of nodes leading to the current terminal,
+     * which allows us to backtrack up the path to find the next
+     * terminal when we increment the iterator.
+     */
+
+    struct iterator
+    {
+    private:
+        /**
+         * The node cache that created this iterator.
+         */
+
+        node_cache_t  &cache;
+
+        /**
+         * Whether there are any more assignments in this iterator.
+         */
+
+        bool  finished;
+
+        /**
+         * Our node stack is simply a vector of node references.
+         */
+
+        typedef std::vector<node_t>  stack_t;
+
+        /**
+         * The sequence of nodes leading to the current terminal,
+         * represented as a stack.
+         */
+
+        stack_t  stack;
+
+    public:
+        /**
+         * The result returned from the iterator is a pair of the
+         * assignment and the terminal value.
+         */
+
+        typedef std::pair<assignment_t, range_t>  value_t;
+
+    private:
+        /**
+         * The result returned from the iterator.
+         */
+
+        value_t  result;
+
+        /**
+         * A helper method to get at the assignment part of the
+         * current path.
+         */
+
+        assignment_t &
+        assignment()
+        {
+            return result.first;
+        }
+
+        /**
+         * A helper method to get at the terminal value part of the
+         * current path.
+         */
+
+        range_t &
+        terminal()
+        {
+            return result.second;
+        }
+
+        /**
+         * Advance to the next path in the BDD tree.  Sets finished to
+         * true if there are no more paths; otherwise fills in
+         * assignment, stack, terminal, and result for the next path.
+         */
+
+        void advance();
+
+        /**
+         * Add the given node ID to the node stack, and trace down
+         * from it until we find a terminal node.  Assign values to
+         * the variables for each nonterminal that encounter along the
+         * way.  We check low edges first, so each variable will be
+         * assigned FALSE.  (The high edges will be checked eventually
+         * by a call to the advance method.)
+         */
+
+        void add_node(node_id_t id);
+
+    public:
+        /**
+         * Create a new iterator that points past the end of the set.
+         */
+
+        iterator(node_cache_t &cache_):
+            cache(cache_),
+            finished(true)
+        {
+        }
+
+        /**
+         * Create a new iterator for the given root node.
+         */
+
+        iterator(node_cache_t &cache_, node_id_t id):
+            cache(cache_),
+            finished(false)
+        {
+            add_node(id);
+        }
+
+        /**
+         * Copy construct an iterator.
+         */
+
+        iterator(const iterator &other):
+            cache(other.cache),
+            finished(other.finished),
+            stack(other.stack),
+            result(other.result)
+        {
+        }
+
+        /**
+         * Copy an iterator.
+         */
+
+        iterator &
+        operator = (const iterator &other)
+        {
+            finished = other.finished;
+            stack = other.stack;
+            result = other.result;
+
+            return (*this);
+        }
+
+        /**
+         * Compare two iterators for equality.
+         */
+
+        bool
+        operator == (const iterator &other) const
+        {
+            // If either iterator is finished, then the other must be,
+            // too.
+
+            if (finished || other.finished)
+                return (finished && other.finished);
+
+            // Otherwise, comparing the assignments and terminal
+            // values is enough.
+
+            return (result == other.result);
+        }
+
+        /**
+         * Compare two pointers for inequality.
+         */
+
+        bool
+        operator != (const iterator &other) const
+        {
+            return !(this->operator == (other));
+        }
+
+        /**
+         * Dereference the iterator, returning the assignment and
+         * terminal value of the current path.
+         */
+
+        const value_t &
+        operator * () const
+        {
+            return result;
+        }
+
+        /**
+         * Dereference the iterator, returning the assignment and
+         * terminal value of the current path.
+         */
+
+        value_t &
+        operator * ()
+        {
+            return result;
+        }
+
+        /**
+         * Dereference the iterator, returning the assignment and
+         * terminal value of the current path.
+         */
+
+        const value_t *
+        operator -> () const
+        {
+            return &result;
+        }
+
+        /**
+         * Dereference the iterator, returning the assignment and
+         * terminal value of the current path.
+         */
+
+        value_t *
+        operator -> ()
+        {
+            return &result;
+        }
+
+        /**
+         * Advance the iterator to the next assignment.
+         */
+
+        iterator &
+        operator ++ ()
+        {
+            advance();
+            return (*this);
+        }
+
+        /**
+         * Advance the iterator to the next assignment.
+         */
+
+        iterator
+        operator ++ (int dummy)
+        {
+            iterator  saved(*this);
+            advance();
+            return saved;
+        }
+    };
+
+
+    /**
+     * Return an iterator that yields all of the assignments in the
+     * given BDD.  The iterator returns a pair; the first element is
+     * an assignment_t providing the value that each variable takes,
+     * while the second is the terminal value that is the result of
+     * the Boolean function.
+     */
+
+    iterator begin(node_id_t node)
+    {
+        return iterator(*this, node);
+    }
+
+
+    /**
+     * Return an iterator that points past the end of any assignments
+     * in any BDD.
+     */
+
+    iterator end()
+    {
+        return iterator(*this);
     }
 };
 

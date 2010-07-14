@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <boost/dynamic_bitset.hpp>
+#include <boost/logic/tribool.hpp>
 #include <glog/logging.h>
 
 #include <ip/bdd/nodes.hh>
@@ -112,6 +113,82 @@ node_cache_t::reachable_node_count(node_id_t id) const
     // Return the result
 
     return node_count;
+}
+
+
+void node_cache_t::iterator::advance()
+{
+    // If we're already at the end of the iterator, don't do anything.
+
+    if (finished)
+        return;
+
+    // We look at the last node in the stack.  If it's currently
+    // assigned a false value, then we track down its true branch.  If
+    // it's got a true branch, then we pop it off and check the next
+    // to last node.
+
+    while (!stack.empty())
+    {
+        boost::logic::tribool  &current_value =
+            assignment()[stack.back().variable()];
+
+        // The current value can't be indeterminate, because we
+        // definitely assign a TRUE or FALSE to the variables of the
+        // nodes that we encounter.
+
+        if (current_value)
+        {
+            // We've checked both outgoing edges for this node, so pop
+            // it off and look at its parent.
+
+            stack.pop_back();
+
+            // Before continuing, reset this node's variable to
+            // indeterminate in the assignment.
+
+            current_value = boost::logic::indeterminate;
+
+        } else {
+            // We've checked this node's low edge, but not its high
+            // edge.  Set the variable to TRUE in the assignment, and
+            // add the high edge's node to the node stack.
+
+            current_value = true;
+            add_node(stack.back().high());
+            return;
+        }
+    }
+
+    // If we fall through then we ran out of nodes to check.  That
+    // means the iterator is done!
+
+    finished = true;
+}
+
+
+void node_cache_t::iterator::add_node(node_id_t id)
+{
+    // Keep tracing down low edges until we reach a terminal.
+
+    while (id < 0)
+    {
+        // Add this nonterminal node to the stack, and trace down
+        // further into the tree.  We check low edges first, so set
+        // the node's variable to FALSE in the assignment.
+
+        const node_t  &node = cache.node(id);
+
+        stack.push_back(node);
+        assignment()[node.variable()] = false;
+
+        id = node.low();
+    }
+
+    // Once we find a terminal node, save it away in the iterator
+    // result and return.
+
+    terminal() = id;
 }
 
 

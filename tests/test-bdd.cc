@@ -510,6 +510,90 @@ TEST(BDD_Load_2)
 
 
 //--------------------------------------------------------------------
+// Iteration
+
+TEST(BDD_Iterate_1)
+{
+    std::cerr << "Starting BDD_Iterate_1 test case." << std::endl;
+
+    // Create a BDD representing
+    //   f(x) = ¬x[0]
+
+    node_cache_t  cache;
+
+    node_id_t  n_false = cache.terminal(false);
+    node_id_t  n_true = cache.terminal(true);
+
+    node_id_t  node = cache.nonterminal(0, n_true, n_false);
+
+    // And test we can get the right iterated results out of it.
+
+    assignment_t  a;
+
+    node_cache_t::iterator  it = cache.begin(node);
+
+    a.clear();
+    a[0] = false;
+    CHECK_EQUAL(a, it->first);
+    CHECK_EQUAL(true, it->second);
+
+    ++it;
+    a.clear();
+    a[0] = true;
+    CHECK_EQUAL(a, it->first);
+    CHECK_EQUAL(false, it->second);
+
+    ++it;
+    CHECK(it == cache.end());
+}
+
+
+TEST(BDD_Iterate_2)
+{
+    std::cerr << "Starting BDD_Iterate_2 test case." << std::endl;
+
+    // Create a BDD representing
+    //   f(x) = ¬x[0] ∧ x[1]
+
+    node_cache_t  cache;
+
+    node_id_t  n_false = cache.terminal(false);
+    node_id_t  n_true = cache.terminal(true);
+
+    node_id_t  node1 = cache.nonterminal(1, n_false, n_true);
+    node_id_t  node = cache.nonterminal(0, node1, n_false);
+
+    // And test we can get the right iterated results out of it.
+
+    assignment_t  a;
+
+    node_cache_t::iterator  it = cache.begin(node);
+
+    a.clear();
+    a[0] = false;
+    a[1] = false;
+    CHECK_EQUAL(a, it->first);
+    CHECK_EQUAL(false, it->second);
+
+    ++it;
+    a.clear();
+    a[0] = false;
+    a[1] = true;
+    CHECK_EQUAL(a, it->first);
+    CHECK_EQUAL(true, it->second);
+
+    ++it;
+    a.clear();
+    a[0] = true;
+    CHECK_EQUAL(a, it->first);
+    CHECK_EQUAL(false, it->second);
+
+    ++it;
+    CHECK(it == cache.end());
+}
+
+
+//--------------------------------------------------------------------
 // Boilerplate
 
 int main(int argc, char **argv)
