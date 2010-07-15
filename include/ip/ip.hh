@@ -13,7 +13,9 @@
 
 
 #include <cstring>
+#include <exception>
 #include <ostream>
+#include <arpa/inet.h>
 
 #include <boost/cstdint.hpp>
 #include <boost/variant.hpp>
@@ -27,6 +29,21 @@ namespace ip {
 class ipv4_addr_t;
 class ipv6_addr_t;
 class ip_addr_t;
+
+
+/**
+ * An exception that is thrown when the caller attempts to create an
+ * IP address from an invalid string.
+ */
+
+class bad_ip_format: public std::exception
+{
+public:
+    virtual const char* what() const throw()
+    {
+        return "Invalid IP address string";
+    }
+};
 
 
 /**
@@ -93,6 +110,30 @@ public:
     ipv4_addr_t(boost::uint32_t u32_):
         values(u32_)
     {
+    }
+
+    /**
+     * Create a new IPv4 address from a character string.  The string
+     * should be in a standard dotted-quad notation.
+     */
+
+    explicit
+    ipv4_addr_t(const char *str):
+        values(0)
+    {
+        parse_string(str);
+    }
+
+    /**
+     * Create a new IPv4 address from a character string.  The string
+     * should be in a standard dotted-quad notation.
+     */
+
+    explicit
+    ipv4_addr_t(const std::string str):
+        values(0)
+    {
+        parse_string(str.c_str());
     }
 
     /**
@@ -228,6 +269,22 @@ private:
         return result.u32;
     }
 
+    /**
+     * Parse a string representation of an IPv4 address, throwing an
+     * exception if the string isn't the right format.
+     */
+
+    void
+    parse_string(const char *str)
+    {
+        int  rc = inet_pton(AF_INET, str, &values);
+
+        if (rc != 1)
+        {
+            throw bad_ip_format();
+        }
+    }
+
 };
 
 
@@ -307,6 +364,28 @@ public:
                 boost::uint16_t w7):
         values(make_from_words(w0, w1, w2, w3, w4, w5, w6, w7))
     {
+    }
+
+    /**
+     * Create a new IPv6 address from a character string.  The string
+     * should be in a valid IPv6 string format.
+     */
+
+    explicit
+    ipv6_addr_t(const char *str)
+    {
+        parse_string(str);
+    }
+
+    /**
+     * Create a new IPv6 address from a character string.  The string
+     * should be in a valid IPv6 string format.
+     */
+
+    explicit
+    ipv6_addr_t(const std::string str)
+    {
+        parse_string(str.c_str());
     }
 
     /**
@@ -488,6 +567,22 @@ private:
         return result;
     }
 
+    /**
+     * Parse a string representation of an IPv6 address, throwing an
+     * exception if the string isn't the right format.
+     */
+
+    void
+    parse_string(const char *str)
+    {
+        int  rc = inet_pton(AF_INET6, str, &values);
+
+        if (rc != 1)
+        {
+            throw bad_ip_format();
+        }
+    }
+
 };
 
 
@@ -534,6 +629,30 @@ public:
     ip_addr_t(const ipv6_addr_t &ipv6):
         addr(ipv6)
     {
+    }
+
+    /**
+     * Create a new generic IP address from a character string.  The
+     * string should be in a valid IPv4 or IPv6 format.
+     */
+
+    explicit
+    ip_addr_t(const char *str):
+        addr()
+    {
+        parse_string(str);
+    }
+
+    /**
+     * Create a new IPv4 address from a character string.  The string
+     * should be in a standard dotted-quad notation.
+     */
+
+    explicit
+    ip_addr_t(const std::string str):
+        addr()
+    {
+        parse_string(str.c_str());
     }
 
     /**
@@ -674,6 +793,27 @@ private:
             return (const boost::uint8_t *) ipv6;
         }
     };
+
+    /**
+     * Parse a string representation of an IPv4 or IPv6 address,
+     * throwing an exception if the string isn't in a valid format.
+     */
+
+    void
+    parse_string(const char *str)
+    {
+        // Try to parse the address as IPv4 first.
+
+        try
+        {
+            addr = ipv4_addr_t(str);
+        } catch (bad_ip_format &) {
+            // Next try the address as IPv6.  If that raises an
+            // exception, let it through.
+
+            addr = ipv6_addr_t(str);
+        }
+    }
 
 };
 

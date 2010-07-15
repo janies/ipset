@@ -88,6 +88,28 @@ TEST(IPv4_String)
 }
 
 
+TEST(IPv4_Parse)
+{
+    std::cerr << "Starting IPv4_Parse test case." << std::endl;
+
+    ipv4_addr_t  e(192,168,0,1);
+    ipv4_addr_t  a("192.168.0.1");
+
+    CHECK_EQUAL(e, a);
+}
+
+
+TEST(IPv4_Parse_Bad)
+{
+    std::cerr << "Starting IPv4_Parse_Bad test case." << std::endl;
+
+    CHECK_THROW(
+        ipv4_addr_t  a("not-an-ip"),
+        bad_ip_format
+    );
+}
+
+
 TEST(IPv4_Dec_String)
 {
     std::cerr << "Starting IPv4_Dec_String test case." << std::endl;
@@ -184,6 +206,39 @@ TEST(IPv6_String_2)
     s << a;
 
     CHECK_EQUAL("::ffff:192.168.0.1", s.str());
+}
+
+
+TEST(IPv6_Parse_1)
+{
+    std::cerr << "Starting IPv6_Parse_1 test case." << std::endl;
+
+    ipv6_addr_t  e(0xfe80,0,0,0,0,0,0,1);
+    ipv6_addr_t  a("fe80::1");
+
+    CHECK_EQUAL(e, a);
+}
+
+
+TEST(IPv6_Parse_2)
+{
+    std::cerr << "Starting IPv6_Parse_2 test case." << std::endl;
+
+    ipv6_addr_t  e(0,0,0,0,0,0xffff,0xc0a8,0x0001);
+    ipv6_addr_t  a("::ffff:192.168.0.1");
+
+    CHECK_EQUAL(e, a);
+}
+
+
+TEST(IPv6_Parse_Bad)
+{
+    std::cerr << "Starting IPv6_Parse_Bad test case." << std::endl;
+
+    CHECK_THROW(
+        ipv6_addr_t  a("not-an-ip"),
+        bad_ip_format
+    );
 }
 
 
@@ -285,6 +340,17 @@ TEST(Gen_IPv4_String)
     s << ip;
 
     CHECK_EQUAL("192.168.0.1", s.str());
+}
+
+
+TEST(Gen_IPv4_Parse)
+{
+    std::cerr << "Starting Gen_IPv4_Parse test case." << std::endl;
+
+    ipv4_addr_t  e(192,168,0,1);
+    ip_addr_t  a("192.168.0.1");
+
+    CHECK_EQUAL(e, a);
 }
 
 
@@ -403,6 +469,28 @@ TEST(Gen_IPv6_String_2)
 }
 
 
+TEST(Gen_IPv6_Parse_1)
+{
+    std::cerr << "Starting Gen_IPv6_Parse_1 test case." << std::endl;
+
+    ipv6_addr_t  e(0xfe80,0,0,0,0,0,0,1);
+    ip_addr_t  a("fe80::1");
+
+    CHECK_EQUAL(e, a);
+}
+
+
+TEST(Gen_IPv6_Parse_2)
+{
+    std::cerr << "Starting Gen_IPv6_Parse_2 test case." << std::endl;
+
+    ipv6_addr_t  e(0,0,0,0,0,0xffff,0xc0a8,0x0001);
+    ip_addr_t  a("::ffff:192.168.0.1");
+
+    CHECK_EQUAL(e, a);
+}
+
+
 TEST(Gen_IPv6_Copy_1)
 {
     std::cerr << "Starting Gen_IPv6_Copy_1 test case." << std::endl;
@@ -425,6 +513,17 @@ TEST(Gen_IP_Equal_1)
     ip_addr_t  ip2(a2);
 
     CHECK(ip1 != ip2);
+}
+
+
+TEST(Gen_IP_Parse_Bad)
+{
+    std::cerr << "Starting Gen_IP_Parse_Bad test case." << std::endl;
+
+    CHECK_THROW(
+        ip_addr_t  a("not-an-ip"),
+        bad_ip_format
+    );
 }
 
 
