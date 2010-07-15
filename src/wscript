@@ -39,6 +39,7 @@ def build(bld):
     bld(
         features="cc cshlib",
         source = bld.path.ant_glob("libipset/**/*.c"),
+        defines = ['G_LOG_DOMAIN=\"ipset\"'],
         includes = ["../include"],
         target = "libipset",
         uselib = "GLIB CUDD",

@@ -45,5 +45,6 @@ def build(bld):
 
         test.unit_test = True
 
+    make_test("test-bdd")
     make_test("test-ipmap")
     make_test("test-ipset")
