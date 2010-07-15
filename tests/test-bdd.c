@@ -158,6 +158,118 @@ END_TEST
 
 
 /*-----------------------------------------------------------------------
+ * Evaluation
+ */
+
+START_TEST(test_bdd_evaluate_1)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = ¬x[0]
+     */
+
+    ipset_node_id_t  n_false =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  node =
+        ipset_node_cache_nonterminal(cache, 0, n_true, n_false);
+
+    /*
+     * And test we can get the right results out of it.
+     */
+
+    guint8  input1[] = { 0x80 }; /* { TRUE } */
+    gboolean  expected1 = FALSE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bit_array_assignment,
+                                    input1)
+                == expected1,
+                "BDD evaluates to wrong value");
+
+    guint8  input2[] = { 0x00 }; /* { FALSE } */
+    gboolean  expected2 = TRUE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bit_array_assignment,
+                                    input2)
+                == expected2,
+                "BDD evaluates to wrong value");
+
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+START_TEST(test_bdd_evaluate_2)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = ¬x[0] ∧ x[1]
+     */
+
+    ipset_node_id_t  n_false =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  node1 =
+        ipset_node_cache_nonterminal(cache, 1, n_false, n_true);
+    ipset_node_id_t  node =
+        ipset_node_cache_nonterminal(cache, 0, node1, n_false);
+
+    /*
+     * And test we can get the right results out of it.
+     */
+
+    gboolean  input1[] = { TRUE, TRUE };
+    gboolean  expected1 = FALSE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bool_array_assignment,
+                                    input1)
+                == expected1,
+                "BDD evaluates to wrong value");
+
+    gboolean  input2[] = { TRUE, FALSE };
+    gboolean  expected2 = FALSE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bool_array_assignment,
+                                    input2)
+                == expected2,
+                "BDD evaluates to wrong value");
+
+    gboolean  input3[] = { FALSE, TRUE };
+    gboolean  expected3 = TRUE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bool_array_assignment,
+                                    input3)
+                == expected3,
+                "BDD evaluates to wrong value");
+
+    gboolean  input4[] = { FALSE, FALSE };
+    gboolean  expected4 = FALSE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bool_array_assignment,
+                                    input4)
+                == expected4,
+                "BDD evaluates to wrong value");
+
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+/*-----------------------------------------------------------------------
  * Testing harness
  */
 
@@ -177,6 +289,11 @@ test_suite()
     tcase_add_test(tc_nonterminals, test_bdd_nonterminal_reduced_1);
     tcase_add_test(tc_nonterminals, test_bdd_nonterminal_reduced_2);
     suite_add_tcase(s, tc_nonterminals);
+
+    TCase  *tc_evaluation = tcase_create("evaluation");
+    tcase_add_test(tc_evaluation, test_bdd_evaluate_1);
+    tcase_add_test(tc_evaluation, test_bdd_evaluate_2);
+    suite_add_tcase(s, tc_evaluation);
 
     return s;
 }

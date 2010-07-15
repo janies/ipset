@@ -222,4 +222,44 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
                              ipset_node_id_t high);
 
 
+/*-----------------------------------------------------------------------
+ * Evaluating BDDs
+ */
+
+/**
+ * A function that provides the value for each variable in a BDD.
+ */
+
+typedef gboolean
+(*ipset_assignment_func_t)(gconstpointer user_data,
+                           ipset_variable_t variable);
+
+/**
+ * An assignment function that gets the variable values from an array
+ * of gbooleans.
+ */
+
+gboolean
+ipset_bool_array_assignment(gconstpointer user_data,
+                            ipset_variable_t variable);
+
+/**
+ * An assignment function that gets the variable values from an array
+ * of bits.
+ */
+
+gboolean
+ipset_bit_array_assignment(gconstpointer user_data,
+                           ipset_variable_t variable);
+
+/**
+ * Evaluate a BDD given a particular assignment of variables.
+ */
+
+ipset_range_t
+ipset_node_evaluate(ipset_node_id_t node,
+                    ipset_assignment_func_t assignment,
+                    gconstpointer user_data);
+
+
 #endif  /* IPSET_BDD_NODES_H */

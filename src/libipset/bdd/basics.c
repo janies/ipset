@@ -209,3 +209,80 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
         return real_node;
     }
 }
+
+
+gboolean
+ipset_bool_array_assignment(gconstpointer user_data,
+                            ipset_variable_t variable)
+{
+    const gboolean  *bool_array = (const gboolean *) user_data;
+    return bool_array[variable];
+}
+
+
+gboolean
+ipset_bit_array_assignment(gconstpointer user_data,
+                           ipset_variable_t variable)
+{
+    const guint8  *bit_array = (const guint8 *) user_data;
+    unsigned int  byte_index = variable / 8;
+    unsigned int  bit_number = variable % 8;
+    unsigned int  bit_mask = 0x80 >> bit_number;
+
+    return ((bit_array[byte_index] & bit_mask) != 0);
+}
+
+
+ipset_range_t
+ipset_node_evaluate(ipset_node_id_t node_id,
+                    ipset_assignment_func_t assignment,
+                    gconstpointer user_data)
+{
+    ipset_node_id_t  curr_node_id = node_id;
+
+    g_debug("Evaluating BDD node %p", node_id);
+
+    /*
+     * As long as the current node is a nonterminal, we have to check
+     * the value of the current variable.
+     */
+
+    while (ipset_node_get_type(curr_node_id) == IPSET_NONTERMINAL_NODE)
+    {
+        /*
+         * We have to look up this variable in the assignment.
+         */
+
+        ipset_node_t  *node = ipset_nonterminal_node(curr_node_id);
+        gboolean  this_value = assignment(user_data, node->variable);
+
+        g_debug("Variable %u has value %s", node->variable,
+                this_value? "TRUE": "FALSE");
+
+        if (this_value)
+        {
+            /*
+             * This node's variable is true in the assignment vector,
+             * so trace down the high subtree.
+             */
+
+            curr_node_id = node->high;
+        } else {
+            /*
+             * This node's variable is false in the assignment vector,
+             * so trace down the low subtree.
+             */
+
+            curr_node_id = node->low;
+        }
+    }
+
+    /*
+     * Once we find a terminal node, we've got the final result.
+     */
+
+    g_debug("Evaluated result is %d",
+            ipset_terminal_value(curr_node_id));
+
+    return ipset_terminal_value(curr_node_id);
+}
