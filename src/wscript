@@ -19,7 +19,7 @@ def configure(conf):
     conf.check_tool("misc")
     conf.check_tool("boost")
 
-    conf.check_boost()
+    conf.check_boost(lib="program_options")
 
     conf.check_cfg(atleast_pkgconfig_version="0.15.0")
     conf.check_cfg(
@@ -50,4 +50,13 @@ def build(bld):
         source = Utils.subst_vars("${APPNAME}.pc.in", bld.env),
         target = Utils.subst_vars("${APPNAME}.pc", bld.env),
         install_path = "${PREFIX}/lib/pkgconfig",
+    )
+
+    bld(
+        features="cxx cprogram",
+        source = bld.path.ant_glob("ipsetbuild/**/*.cc"),
+        includes = ["../include"],
+        target = "ipsetbuild/ipsetbuild",
+        uselib = "GLOG BOOST_PROGRAM_OPTIONS",
+        uselib_local = "ipset",
     )
