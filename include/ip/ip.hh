@@ -603,6 +603,12 @@ operator << (std::ostream &stream, const ipv6_addr_t &ip);
 class ip_addr_t
 {
 public:
+    /**
+     * A handy typedef for referring to the Boost Variant type that we
+     * use to store the actual address.
+     */
+
+    typedef boost::variant<ipv4_addr_t, ipv6_addr_t>  variant_t;
 
     /**
      * Create a new, empty IP address.
@@ -718,6 +724,15 @@ public:
     }
 
     /**
+     * Return the Boost Variant for this IP address.
+     */
+
+    const variant_t &variant() const
+    {
+        return addr;
+    }
+
+    /**
      * The IP address can be cast to a (uint8_t *); this just returns
      * a pointer to the raw address data.
      */
@@ -750,13 +765,6 @@ public:
     operator << (std::ostream &stream, const ip_addr_t &ip);
 
 private:
-
-    /**
-     * A handy typedef for referring to the Boost Variant type that we
-     * use to store the actual address.
-     */
-
-    typedef boost::variant<ipv4_addr_t, ipv6_addr_t>  variant_t;
 
     /**
      * The contained IPv4 or IPv6 address.
