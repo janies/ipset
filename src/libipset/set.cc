@@ -9,6 +9,7 @@
  */
 
 #include <boost/cstdint.hpp>
+#include <boost/variant.hpp>
 #include <glog/logging.h>
 
 #include <ip/ip.hh>
@@ -249,6 +250,57 @@ set_t::add_ipv6(const boost::uint8_t *addr, unsigned int netmask)
 
     bdd = new_bdd;
     return elem_already_present;
+}
+
+
+/**
+ * A Boost variant visitor for adding a generic IP address to a set.
+ */
+
+struct set_t::add_ip_visitor: public boost::static_visitor<bool>
+{
+    set_t  &set;
+    unsigned int  v4_netmask;
+    unsigned int  v6_netmask;
+
+    add_ip_visitor(set_t &set_,
+                   unsigned int v4_netmask_,
+                   unsigned int v6_netmask_):
+        set(set_),
+        v4_netmask(v4_netmask_),
+        v6_netmask(v6_netmask_)
+    {
+    }
+
+    bool
+    operator () (const ipv4_addr_t &addr)
+    {
+        return set.add(addr, v4_netmask);
+    }
+
+    bool
+    operator () (const ipv6_addr_t &addr)
+    {
+        return set.add(addr, v6_netmask);
+    }
+};
+
+
+bool
+set_t::add(const ip_addr_t &addr)
+{
+    add_ip_visitor  visitor(*this,
+                            ipv4_addr_t::bit_size,
+                            ipv6_addr_t::bit_size);
+    return boost::apply_visitor(visitor, addr.variant());
+}
+
+
+bool
+set_t::add(const ip_addr_t &addr, unsigned int netmask)
+{
+    add_ip_visitor  visitor(*this, netmask, netmask);
+    return boost::apply_visitor(visitor, addr.variant());
 }
 
 

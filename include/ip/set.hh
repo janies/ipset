@@ -116,6 +116,13 @@ private:
     create_ipv6_bdd(const boost::uint8_t *addr, unsigned int netmask);
 
     /**
+     * A Boost variant visitor for adding a generic IP address to a
+     * set.
+     */
+
+    struct add_ip_visitor;
+
+    /**
      * The BDD node that represents this set.
      */
 
@@ -250,6 +257,26 @@ public:
         return add_ipv6
             (static_cast<const boost::uint8_t *>(addr), netmask);
     }
+
+    /**
+     * Add a generic IP address to an IP set, based on an address
+     * stored in an ip_addr_t.
+     *
+     * Return whether the value was already in the set or not.
+     */
+
+    bool
+    add(const ip_addr_t &addr);
+
+    /**
+     * Add a generic IP network to an IP set, based on an address
+     * stored in an ip_addr_t.
+     *
+     * Return whether the value was already in the set or not.
+     */
+
+    bool
+    add(const ip_addr_t &addr, unsigned int netmask);
 
     /**
      * Check whether a particular IPv4 address is in the set.  We

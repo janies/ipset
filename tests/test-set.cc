@@ -292,6 +292,21 @@ TEST(IPv4_Set_Equal_Net_2)
     CHECK_EQUAL(s1, s2);
 }
 
+TEST(IPv4_Gen_Set_Equal_1)
+{
+    std::cerr << "Starting IPv4_Gen_Set_Equal_1 test case." << std::endl;
+
+    set_t  s1;
+    set_t  s2;
+    ipv4_addr_t  a1(192,168,0,1);
+    ip_addr_t  ga1(a1);
+
+    s1.add(a1);
+    s2.add(ga1);
+
+    CHECK_EQUAL(s1, s2);
+}
+
 TEST(IPv4_Set_Idempotent)
 {
     std::cerr << "Starting IPv4_Set_Idempotent test case." << std::endl;
@@ -518,6 +533,21 @@ TEST(IPv6_Set_Equal_Net_2)
 
     s2.add(a1, 16);
     s2.add(a2, 16);
+
+    CHECK_EQUAL(s1, s2);
+}
+
+TEST(IPv6_Gen_Set_Equal_1)
+{
+    std::cerr << "Starting IPv6_Gen_Set_Equal_1 test case." << std::endl;
+
+    set_t  s1;
+    set_t  s2;
+    ipv6_addr_t  a1(0xfe80,0,0,0,0,0,0,1);
+    ip_addr_t  ga1(a1);
+
+    s1.add(a1);
+    s2.add(ga1);
 
     CHECK_EQUAL(s1, s2);
 }
