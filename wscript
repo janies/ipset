@@ -12,7 +12,7 @@ from version import *
 #--------------------------
 # Edit the variables below
 
-APPNAME = "PLEASE_DEFINE_APPNAME"
+APPNAME = "ipset"
 VERSION = get_git_version("RELEASE-VERSION")
 
 SUBDIRS = [
@@ -71,6 +71,7 @@ def configure(conf):
     conf.env.APPNAME = APPNAME
     conf.env.VERSION = VERSION
 
+    add_test_dirs(conf)
     map(conf.recurse, SUBDIRS)
 
     # Create debug and release builds

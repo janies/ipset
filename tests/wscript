@@ -32,7 +32,8 @@ def build(bld):
             features = "cc cprogram",
             source = "%s.c" % test_name,
             target = test_name,
-            uselib = "CHECK",
+            uselib = "GLIB CUDD CHECK",
+            uselib_local = "libipset",
             install_path = None,
             includes = [
                 "../include",
@@ -43,3 +44,6 @@ def build(bld):
         )
 
         test.unit_test = True
+
+    make_test("test-ipmap")
+    make_test("test-ipset")

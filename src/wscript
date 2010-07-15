@@ -25,10 +25,27 @@ def configure(conf):
         mandatory=True
     )
 
+    conf.check_cfg(
+        package="cudd",
+        uselib_store="CUDD",
+        args="--cflags --libs",
+        mandatory=True
+    )
+
     conf.env.append_value("RELEASE_DEFINES", "NDEBUG")
 
 
 def build(bld):
+    bld(
+        features="cc cshlib",
+        source = bld.path.ant_glob("libipset/**/*.c"),
+        includes = ["../include"],
+        target = "libipset",
+        uselib = "GLIB CUDD",
+        vnum = "0.0.0",
+        export_incdirs = ["../include"],
+    )
+
     import Utils
 
     bld(
