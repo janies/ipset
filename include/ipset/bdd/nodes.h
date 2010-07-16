@@ -68,6 +68,24 @@ ipset_node_type_t
 ipset_node_get_type(ipset_node_id_t node);
 
 
+/**
+ * Return the number of nodes that are reachable from the given node.
+ * This does not include duplicates if a node is reachable via more
+ * than one path.
+ */
+
+gsize
+ipset_node_reachable_count(ipset_node_id_t node);
+
+
+/**
+ * Return the amount of memory used by the nodes in the given BDD.
+ */
+
+gsize
+ipset_node_memory_size(ipset_node_id_t node);
+
+
 /*-----------------------------------------------------------------------
  * Terminal nodes
  */

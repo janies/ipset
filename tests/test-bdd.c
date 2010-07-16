@@ -504,6 +504,56 @@ END_TEST
 
 
 /*-----------------------------------------------------------------------
+ * Memory size
+ */
+
+START_TEST(test_bdd_size_1)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = (x[0] ∧ x[1]) ∨ (¬x[0] ∧ x[2])
+     */
+
+    ipset_node_id_t  n_false =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  t0 =
+        ipset_node_cache_nonterminal(cache, 0, n_false, n_true);
+    ipset_node_id_t  f0 =
+        ipset_node_cache_nonterminal(cache, 0, n_true, n_false);
+    ipset_node_id_t  t1 =
+        ipset_node_cache_nonterminal(cache, 1, n_false, n_true);
+    ipset_node_id_t  t2 =
+        ipset_node_cache_nonterminal(cache, 2, n_false, n_true);
+
+    ipset_node_id_t  n1 =
+        ipset_node_cache_and(cache, t0, t1);
+    ipset_node_id_t  n2 =
+        ipset_node_cache_and(cache, f0, t2);
+    ipset_node_id_t  node =
+        ipset_node_cache_or(cache, n1, n2);
+
+    /*
+     * And verify how big it is.
+     */
+
+    fail_unless(ipset_node_reachable_count(node) == 3u,
+                "BDD has wrong number of nodes");
+
+    fail_unless(ipset_node_memory_size(node) ==
+                3u * sizeof(ipset_node_t),
+                "BDD takes up wrong amount of space");
+
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+/*-----------------------------------------------------------------------
  * Testing harness
  */
 
@@ -535,6 +585,10 @@ test_suite()
     tcase_add_test(tc_operators, test_bdd_or_reduced_1);
     tcase_add_test(tc_operators, test_bdd_or_evaluate_1);
     suite_add_tcase(s, tc_operators);
+
+    TCase  *tc_size = tcase_create("size");
+    tcase_add_test(tc_size, test_bdd_size_1);
+    suite_add_tcase(s, tc_size);
 
     return s;
 }
