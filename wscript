@@ -133,8 +133,6 @@ def add_test_dirs(tst):
 def run_tests(tst):
     import unittestw
     ut = unittestw.unit_test()
-    ut.want_to_see_test_output = True
-    ut.want_to_see_test_stderr = True
     ut.run_if_waf_does = "test"
     ut.run()
     ut.print_results()
