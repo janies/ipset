@@ -18,6 +18,13 @@
 #include "../hash.c.in"
 
 
+GQuark
+ipset_error_quark()
+{
+    return g_quark_from_static_string("ipset-error-quark");
+}
+
+
 ipset_node_type_t
 ipset_node_get_type(ipset_node_id_t node)
 {

@@ -725,6 +725,125 @@ START_TEST(test_bdd_bad_save_1)
 END_TEST
 
 
+START_TEST(test_bdd_load_1)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = TRUE
+     */
+
+    ipset_node_id_t  node =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    /*
+     * Read a BDD from a string.
+     */
+
+    const char  *raw =
+        "IP set"                             // magic number
+        "\x00\x01"                           // version
+        "\x00\x00\x00\x00\x00\x00\x00\x18"   // length
+        "\x00\x00\x00\x00"                   // node count
+        "\x00\x00\x00\x01"                   // terminal value
+        ;
+    const size_t  raw_length = 24;
+
+    GInputStream  *stream =
+        g_memory_input_stream_new_from_data
+        (raw, raw_length, NULL);
+
+    GError  *error = NULL;
+    ipset_node_id_t  read =
+        ipset_node_cache_load(stream, cache, &error);
+
+    fail_unless(error == NULL,
+                "Error reading BDD from stream");
+
+    fail_unless(read == node,
+                "BDD from stream doesn't match expected");
+
+    g_object_unref(stream);
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+START_TEST(test_bdd_load_2)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = (x[0] ∧ x[1]) ∨ (¬x[0] ∧ x[2])
+     */
+
+    ipset_node_id_t  n_false =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  t0 =
+        ipset_node_cache_nonterminal(cache, 0, n_false, n_true);
+    ipset_node_id_t  f0 =
+        ipset_node_cache_nonterminal(cache, 0, n_true, n_false);
+    ipset_node_id_t  t1 =
+        ipset_node_cache_nonterminal(cache, 1, n_false, n_true);
+    ipset_node_id_t  t2 =
+        ipset_node_cache_nonterminal(cache, 2, n_false, n_true);
+
+    ipset_node_id_t  n1 =
+        ipset_node_cache_and(cache, t0, t1);
+    ipset_node_id_t  n2 =
+        ipset_node_cache_and(cache, f0, t2);
+    ipset_node_id_t  node =
+        ipset_node_cache_or(cache, n1, n2);
+
+    /*
+     * Read a BDD from a string.
+     */
+
+    const char  *raw =
+        "IP set"                             // magic number
+        "\x00\x01"                           // version
+        "\x00\x00\x00\x00\x00\x00\x00\x2f"   // length
+        "\x00\x00\x00\x03"                   // node count
+        // node -1
+        "\x02"                               // variable
+        "\x00\x00\x00\x00"                   // low
+        "\x00\x00\x00\x01"                   // high
+        // node -2
+        "\x01"                               // variable
+        "\x00\x00\x00\x00"                   // low
+        "\x00\x00\x00\x01"                   // high
+        // node -3
+        "\x00"                               // variable
+        "\xff\xff\xff\xff"                   // low
+        "\xff\xff\xff\xfe"                   // high
+        ;
+    const size_t  raw_length = 47;
+
+    GInputStream  *stream =
+        g_memory_input_stream_new_from_data
+        (raw, raw_length, NULL);
+
+    GError  *error = NULL;
+    ipset_node_id_t  read =
+        ipset_node_cache_load(stream, cache, &error);
+
+    fail_unless(error == NULL,
+                "Error reading BDD from stream");
+
+    fail_unless(read == node,
+                "BDD from stream doesn't match expected");
+
+    g_object_unref(stream);
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
 /*-----------------------------------------------------------------------
  * Testing harness
  */
@@ -762,11 +881,13 @@ test_suite()
     tcase_add_test(tc_size, test_bdd_size_1);
     suite_add_tcase(s, tc_size);
 
-    TCase  *tc_save = tcase_create("save");
-    tcase_add_test(tc_save, test_bdd_save_1);
-    tcase_add_test(tc_save, test_bdd_save_2);
-    tcase_add_test(tc_save, test_bdd_bad_save_1);
-    suite_add_tcase(s, tc_save);
+    TCase  *tc_serialization = tcase_create("serialization");
+    tcase_add_test(tc_serialization, test_bdd_save_1);
+    tcase_add_test(tc_serialization, test_bdd_save_2);
+    tcase_add_test(tc_serialization, test_bdd_bad_save_1);
+    tcase_add_test(tc_serialization, test_bdd_load_1);
+    tcase_add_test(tc_serialization, test_bdd_load_2);
+    suite_add_tcase(s, tc_serialization);
 
     return s;
 }

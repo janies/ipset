@@ -19,6 +19,22 @@
 
 
 /*-----------------------------------------------------------------------
+ * Error reporting
+ */
+
+#define IPSET_ERROR ipset_error_quark()
+
+GQuark
+ipset_error_quark();
+
+
+typedef enum
+{
+    IPSET_ERROR_PARSE_ERROR
+} IpsetError;
+
+
+/*-----------------------------------------------------------------------
  * Preliminaries
  */
 
@@ -261,6 +277,17 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
                              ipset_variable_t variable,
                              ipset_node_id_t low,
                              ipset_node_id_t high);
+
+
+/**
+ * Load a BDD from an input stream.  The error field is filled in with
+ * a GError object is the BDD can't be read for any reason.
+ */
+
+ipset_node_id_t
+ipset_node_cache_load(GInputStream *stream,
+                      ipset_node_cache_t *cache,
+                      GError **error);
 
 
 /*-----------------------------------------------------------------------
