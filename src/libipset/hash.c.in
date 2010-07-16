@@ -1,0 +1,24 @@
+/* -*- coding: utf-8 -*-
+ * ----------------------------------------------------------------------
+ * Copyright © 2010, RedJack, LLC.
+ * All rights reserved.
+ *
+ * Please see the LICENSE.txt file in this distribution for license
+ * details.
+ * ----------------------------------------------------------------------
+ */
+
+#include <glib.h>
+
+/**
+ * Iteratively construct a hash value for a struct from the hashes of
+ * its fields.  This definition is taken from the Boost library.
+ *
+ * [1] http://www.boost.org/doc/libs/1_35_0/doc/html/boost/hash_combine_id241013.html
+ */
+
+static void
+combine_hash(guint *hash, guint field_hash)
+{
+    *hash ^= field_hash + 0x9e3779b9 + (*hash << 6) + (*hash >> 2);
+}

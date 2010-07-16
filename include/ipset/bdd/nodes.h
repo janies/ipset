@@ -167,6 +167,12 @@ typedef struct ipset_node_cache
 
     GHashTable  *node_cache;
 
+    /**
+     * A cache of the results of the AND operation.
+     */
+
+    GHashTable  *and_cache;
+
 } ipset_node_cache_t;
 
 /**
@@ -220,6 +226,56 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
                              ipset_variable_t variable,
                              ipset_node_id_t low,
                              ipset_node_id_t high);
+
+
+/*-----------------------------------------------------------------------
+ * BDD operators
+ */
+
+/**
+ * The key for a cache that memoizes the results of a binary BDD
+ * operator.
+ */
+
+typedef struct ipset_binary_key
+{
+    ipset_node_id_t  lhs;
+    ipset_node_id_t  rhs;
+} ipset_binary_key_t;
+
+/**
+ * Return a hash value for a binary operator key.
+ */
+
+guint
+ipset_binary_key_hash(ipset_binary_key_t *key);
+
+/**
+ * Test two binary operator keys for equality.
+ */
+
+gboolean
+ipset_binary_key_equal(const ipset_binary_key_t *key1,
+                       const ipset_binary_key_t *key2);
+
+/**
+ * Fill in the key for a commutative binary BDD operator.  This
+ * ensures that reversed operands yield the same key.
+ */
+
+void
+ipset_binary_key_commutative(ipset_binary_key_t *key,
+                             ipset_node_id_t lhs,
+                             ipset_node_id_t rhs);
+
+/**
+ * Calculate the logical AND (∧) of two BDDs.
+ */
+
+ipset_node_id_t
+ipset_node_cache_and(ipset_node_cache_t *cache,
+                     ipset_node_id_t lhs,
+                     ipset_node_id_t rhs);
 
 
 /*-----------------------------------------------------------------------

@@ -14,20 +14,7 @@
 #include <glib.h>
 
 #include <ipset/bdd/nodes.h>
-
-
-/**
- * Iteratively construct a hash value for a struct from the hashes of
- * its fields.  This definition is taken from the Boost library.
- *
- * [1] http://www.boost.org/doc/libs/1_35_0/doc/html/boost/hash_combine_id241013.html
- */
-
-static void
-combine_hash(guint *hash, guint field_hash)
-{
-    *hash ^= field_hash + 0x9e3779b9 + (*hash << 6) + (*hash >> 2);
-}
+#include "../hash.c.in"
 
 
 ipset_node_type_t
@@ -97,6 +84,9 @@ gboolean
 ipset_node_equal(const ipset_node_t *node1,
                  const ipset_node_t *node2)
 {
+    if (node1 == node2)
+        return TRUE;
+
     return
         (node1->variable == node2->variable) &&
         (node1->low == node2->low) &&
@@ -114,6 +104,10 @@ ipset_node_cache_new()
         g_hash_table_new((GHashFunc) ipset_node_hash,
                          (GEqualFunc) ipset_node_equal);
 
+    cache->and_cache =
+        g_hash_table_new((GHashFunc) ipset_binary_key_hash,
+                         (GEqualFunc) ipset_binary_key_equal);
+
     return cache;
 }
 
@@ -122,6 +116,7 @@ void
 ipset_node_cache_free(ipset_node_cache_t *cache)
 {
     g_hash_table_destroy(cache->node_cache);
+    g_hash_table_destroy(cache->and_cache);
     g_slice_free(ipset_node_cache_t, cache);
 }
 
