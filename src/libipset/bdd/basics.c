@@ -14,6 +14,7 @@
 #include <glib.h>
 
 #include <ipset/bdd/nodes.h>
+#include <ipset/logging.h>
 #include "../hash.c.in"
 
 
@@ -135,13 +136,13 @@ ipset_node_cache_terminal(ipset_node_cache_t *cache,
      * terminal value stored in the remaining bits.
      */
 
-    g_debug("Creating terminal node for %d", value);
+    g_d_debug("Creating terminal node for %d", value);
 
     guint  node_int = (guint) value;
     node_int <<= 1;
     node_int |= 1;
 
-    g_debug("Node ID is %p", GUINT_TO_POINTER(node_int));
+    g_d_debug("Node ID is %p", GUINT_TO_POINTER(node_int));
 
     return GUINT_TO_POINTER(node_int);
 }
@@ -160,8 +161,8 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
 
     if (G_UNLIKELY(low == high))
     {
-        g_debug("Skipping nonterminal(%u,%p,%p)",
-                variable, low, high);
+        g_d_debug("Skipping nonterminal(%u,%p,%p)",
+                  variable, low, high);
         return low;
     }
 
@@ -170,8 +171,8 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
      * contents in the cache.
      */
 
-    g_debug("Searching for nonterminal(%u,%p,%p)",
-            variable, low, high);
+    g_d_debug("Searching for nonterminal(%u,%p,%p)",
+              variable, low, high);
 
     ipset_node_t  search_node;
     search_node.variable = variable;
@@ -192,7 +193,7 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
          * ID.
          */
 
-        g_debug("Existing node, ID = %p", found_node);
+        g_d_debug("Existing node, ID = %p", found_node);
         return found_node;
     } else {
         /*
@@ -205,7 +206,7 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
 
         g_hash_table_insert(cache->node_cache, real_node, NULL);
 
-        g_debug("NEW node, ID = %p", real_node);
+        g_d_debug("NEW node, ID = %p", real_node);
         return real_node;
     }
 }
@@ -240,7 +241,7 @@ ipset_node_evaluate(ipset_node_id_t node_id,
 {
     ipset_node_id_t  curr_node_id = node_id;
 
-    g_debug("Evaluating BDD node %p", node_id);
+    g_d_debug("Evaluating BDD node %p", node_id);
 
     /*
      * As long as the current node is a nonterminal, we have to check
@@ -256,8 +257,8 @@ ipset_node_evaluate(ipset_node_id_t node_id,
         ipset_node_t  *node = ipset_nonterminal_node(curr_node_id);
         gboolean  this_value = assignment(user_data, node->variable);
 
-        g_debug("Variable %u has value %s", node->variable,
-                this_value? "TRUE": "FALSE");
+        g_d_debug("Variable %u has value %s", node->variable,
+                  this_value? "TRUE": "FALSE");
 
         if (this_value)
         {
@@ -281,8 +282,8 @@ ipset_node_evaluate(ipset_node_id_t node_id,
      * Once we find a terminal node, we've got the final result.
      */
 
-    g_debug("Evaluated result is %d",
-            ipset_terminal_value(curr_node_id));
+    g_d_debug("Evaluated result is %d",
+              ipset_terminal_value(curr_node_id));
 
     return ipset_terminal_value(curr_node_id);
 }

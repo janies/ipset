@@ -13,6 +13,7 @@
 #include <glib.h>
 
 #include <ipset/bdd/nodes.h>
+#include <ipset/logging.h>
 #include "../hash.c.in"
 
 
@@ -225,7 +226,7 @@ cached_op(ipset_node_cache_t *cache,
      * operands.
      */
 
-    g_debug("Applying %s(%p, %p)", op_name, lhs, rhs);
+    g_d_debug("Applying %s(%p, %p)", op_name, lhs, rhs);
 
     ipset_binary_key_t  search_key;
     ipset_binary_key_commutative(&search_key, lhs, rhs);
@@ -244,7 +245,7 @@ cached_op(ipset_node_cache_t *cache,
          * There's a result in the cache, so return it.
          */
 
-        g_debug("Existing result = %p", found_result);
+        g_d_debug("Existing result = %p", found_result);
         return found_result;
     } else {
         /*
@@ -259,7 +260,7 @@ cached_op(ipset_node_cache_t *cache,
 
         ipset_node_id_t  result =
             apply_op(cache, op_cache, op, op_name, lhs, rhs);
-        g_debug("NEW result = %p", result);
+        g_d_debug("NEW result = %p", result);
 
         g_hash_table_insert(op_cache, real_key, result);
         return result;
