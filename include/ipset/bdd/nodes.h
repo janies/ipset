@@ -214,6 +214,12 @@ typedef struct ipset_node_cache
 
     GHashTable  *or_cache;
 
+    /**
+     * A cache of the results of the ITE operation.
+     */
+
+    GHashTable  *ite_cache;
+
 } ipset_node_cache_t;
 
 /**
@@ -333,6 +339,43 @@ ipset_binary_key_commutative(ipset_binary_key_t *key,
                              ipset_node_id_t rhs);
 
 /**
+ * The key for a cache that memoizes the results of a trinary BDD
+ * operator.
+ */
+
+typedef struct ipset_trinary_key
+{
+    ipset_node_id_t  f;
+    ipset_node_id_t  g;
+    ipset_node_id_t  h;
+} ipset_trinary_key_t;
+
+/**
+ * Return a hash value for a trinary operator key.
+ */
+
+guint
+ipset_trinary_key_hash(ipset_trinary_key_t *key);
+
+/**
+ * Test two trinary operator keys for equality.
+ */
+
+gboolean
+ipset_trinary_key_equal(const ipset_trinary_key_t *key1,
+                        const ipset_trinary_key_t *key2);
+
+/**
+ * Fill in the key for a trinary BDD operator.
+ */
+
+void
+ipset_trinary_key_init(ipset_trinary_key_t *key,
+                       ipset_node_id_t f,
+                       ipset_node_id_t g,
+                       ipset_node_id_t h);
+
+/**
  * Calculate the logical AND (∧) of two BDDs.
  */
 
@@ -349,6 +392,17 @@ ipset_node_id_t
 ipset_node_cache_or(ipset_node_cache_t *cache,
                     ipset_node_id_t lhs,
                     ipset_node_id_t rhs);
+
+/**
+ * Calculate the IF-THEN-ELSE of three BDDs.  The first BDD should
+ * only have 0 and 1 (FALSE and TRUE) in its range.
+ */
+
+ipset_node_id_t
+ipset_node_cache_ite(ipset_node_cache_t *cache,
+                     ipset_node_id_t f,
+                     ipset_node_id_t g,
+                     ipset_node_id_t h);
 
 
 /*-----------------------------------------------------------------------

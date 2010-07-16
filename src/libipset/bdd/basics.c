@@ -120,6 +120,10 @@ ipset_node_cache_new()
         g_hash_table_new((GHashFunc) ipset_binary_key_hash,
                          (GEqualFunc) ipset_binary_key_equal);
 
+    cache->ite_cache =
+        g_hash_table_new((GHashFunc) ipset_trinary_key_hash,
+                         (GEqualFunc) ipset_trinary_key_equal);
+
     return cache;
 }
 
@@ -130,6 +134,7 @@ ipset_node_cache_free(ipset_node_cache_t *cache)
     g_hash_table_destroy(cache->node_cache);
     g_hash_table_destroy(cache->and_cache);
     g_hash_table_destroy(cache->or_cache);
+    g_hash_table_destroy(cache->ite_cache);
     g_slice_free(ipset_node_cache_t, cache);
 }
 
