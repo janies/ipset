@@ -15,6 +15,7 @@
 #include <stdio.h>
 
 #include <glib.h>
+#include <gio/gio.h>
 
 
 /*-----------------------------------------------------------------------
@@ -84,6 +85,15 @@ ipset_node_reachable_count(ipset_node_id_t node);
 
 gsize
 ipset_node_memory_size(ipset_node_id_t node);
+
+
+/**
+ * Save a BDD to an output stream.  This encodes the set using only
+ * those nodes that are reachable from the BDD's root node.
+ */
+
+gboolean
+ipset_node_save(GOutputStream *stream, ipset_node_id_t node);
 
 
 /*-----------------------------------------------------------------------

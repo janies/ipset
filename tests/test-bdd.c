@@ -11,6 +11,8 @@
 #include <stdlib.h>
 
 #include <check.h>
+#include <glib.h>
+#include <gio/gio.h>
 
 #include <ipset/bdd/nodes.h>
 
@@ -554,6 +556,139 @@ END_TEST
 
 
 /*-----------------------------------------------------------------------
+ * Serialization
+ */
+
+START_TEST(test_bdd_save_1)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = TRUE
+     */
+
+    ipset_node_id_t  node =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    /*
+     * Serialize the BDD into a string.
+     */
+
+    GOutputStream  *stream =
+        g_memory_output_stream_new(NULL, 0, g_realloc, g_free);
+    GMemoryOutputStream  *mstream =
+        G_MEMORY_OUTPUT_STREAM(stream);
+
+    fail_unless(ipset_node_save(stream, node),
+                "Cannot serialize BDD");
+
+    const char  *raw_expected =
+        "IP set"                             // magic number
+        "\x00\x01"                           // version
+        "\x00\x00\x00\x00\x00\x00\x00\x18"   // length
+        "\x00\x00\x00\x00"                   // node count
+        "\x00\x00\x00\x01"                   // terminal value
+        ;
+    const size_t  expected_length = 24;
+
+    gpointer  buf = g_memory_output_stream_get_data(mstream);
+    gsize  len = g_memory_output_stream_get_data_size(mstream);
+
+    fail_unless(expected_length == len,
+                "Serialized BDD has wrong length "
+                "(expected %zu, got %zu)",
+                expected_length, len);
+
+    fail_unless(memcmp(raw_expected, buf, expected_length) == 0,
+                "Serialized BDD has incorrect data");
+
+    g_object_unref(stream);
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+START_TEST(test_bdd_save_2)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = (x[0] ∧ x[1]) ∨ (¬x[0] ∧ x[2])
+     */
+
+    ipset_node_id_t  n_false =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  t0 =
+        ipset_node_cache_nonterminal(cache, 0, n_false, n_true);
+    ipset_node_id_t  f0 =
+        ipset_node_cache_nonterminal(cache, 0, n_true, n_false);
+    ipset_node_id_t  t1 =
+        ipset_node_cache_nonterminal(cache, 1, n_false, n_true);
+    ipset_node_id_t  t2 =
+        ipset_node_cache_nonterminal(cache, 2, n_false, n_true);
+
+    ipset_node_id_t  n1 =
+        ipset_node_cache_and(cache, t0, t1);
+    ipset_node_id_t  n2 =
+        ipset_node_cache_and(cache, f0, t2);
+    ipset_node_id_t  node =
+        ipset_node_cache_or(cache, n1, n2);
+
+    /*
+     * Serialize the BDD into a string.
+     */
+
+    GOutputStream  *stream =
+        g_memory_output_stream_new(NULL, 0, g_realloc, g_free);
+    GMemoryOutputStream  *mstream =
+        G_MEMORY_OUTPUT_STREAM(stream);
+
+    fail_unless(ipset_node_save(stream, node),
+                "Cannot serialize BDD");
+
+    const char  *raw_expected =
+        "IP set"                             // magic number
+        "\x00\x01"                           // version
+        "\x00\x00\x00\x00\x00\x00\x00\x2f"   // length
+        "\x00\x00\x00\x03"                   // node count
+        // node -1
+        "\x02"                               // variable
+        "\x00\x00\x00\x00"                   // low
+        "\x00\x00\x00\x01"                   // high
+        // node -2
+        "\x01"                               // variable
+        "\x00\x00\x00\x00"                   // low
+        "\x00\x00\x00\x01"                   // high
+        // node -3
+        "\x00"                               // variable
+        "\xff\xff\xff\xff"                   // low
+        "\xff\xff\xff\xfe"                   // high
+        ;
+    const size_t  expected_length = 47;
+
+    gpointer  buf = g_memory_output_stream_get_data(mstream);
+    gsize  len = g_memory_output_stream_get_data_size(mstream);
+
+    fail_unless(expected_length == len,
+                "Serialized BDD has wrong length "
+                "(expected %zu, got %zu)",
+                expected_length, len);
+
+    fail_unless(memcmp(raw_expected, buf, expected_length) == 0,
+                "Serialized BDD has incorrect data");
+
+    g_object_unref(stream);
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+/*-----------------------------------------------------------------------
  * Testing harness
  */
 
@@ -590,6 +725,11 @@ test_suite()
     tcase_add_test(tc_size, test_bdd_size_1);
     suite_add_tcase(s, tc_size);
 
+    TCase  *tc_save = tcase_create("save");
+    tcase_add_test(tc_save, test_bdd_save_1);
+    tcase_add_test(tc_save, test_bdd_save_2);
+    suite_add_tcase(s, tc_save);
+
     return s;
 }
 
@@ -600,6 +740,8 @@ main(int argc, const char **argv)
     int  number_failed;
     Suite  *suite = test_suite();
     SRunner  *runner = srunner_create(suite);
+
+    g_type_init();
 
     srunner_run_all(runner, CK_NORMAL);
     number_failed = srunner_ntests_failed(runner);
