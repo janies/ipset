@@ -103,16 +103,6 @@ gsize
 ipset_node_memory_size(ipset_node_id_t node);
 
 
-/**
- * Save a BDD to an output stream.  This encodes the set using only
- * those nodes that are reachable from the BDD's root node.
- */
-
-gboolean
-ipset_node_save(GOutputStream *stream, ipset_node_id_t node,
-                GError **error);
-
-
 /*-----------------------------------------------------------------------
  * Terminal nodes
  */
@@ -287,6 +277,18 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
 ipset_node_id_t
 ipset_node_cache_load(GInputStream *stream,
                       ipset_node_cache_t *cache,
+                      GError **error);
+
+
+/**
+ * Save a BDD to an output stream.  This encodes the set using only
+ * those nodes that are reachable from the BDD's root node.
+ */
+
+gboolean
+ipset_node_cache_save(GOutputStream *stream,
+                      ipset_node_cache_t *cache,
+                      ipset_node_id_t node,
                       GError **error);
 
 

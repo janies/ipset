@@ -580,7 +580,7 @@ START_TEST(test_bdd_save_1)
     GMemoryOutputStream  *mstream =
         G_MEMORY_OUTPUT_STREAM(stream);
 
-    fail_unless(ipset_node_save(stream, node, NULL),
+    fail_unless(ipset_node_cache_save(stream, cache, node, NULL),
                 "Cannot serialize BDD");
 
     const char  *raw_expected =
@@ -648,7 +648,7 @@ START_TEST(test_bdd_save_2)
     GMemoryOutputStream  *mstream =
         G_MEMORY_OUTPUT_STREAM(stream);
 
-    fail_unless(ipset_node_save(stream, node, NULL),
+    fail_unless(ipset_node_cache_save(stream, cache, node, NULL),
                 "Cannot serialize BDD");
 
     const char  *raw_expected =
@@ -712,7 +712,7 @@ START_TEST(test_bdd_bad_save_1)
         g_memory_output_stream_new(buf, buf_len, NULL, NULL);
 
     GError  *error = NULL;
-    ipset_node_save(stream, node, &error);
+    ipset_node_cache_save(stream, cache, node, &error);
 
     fail_unless(error != NULL,
                 "Should get error when serializing "

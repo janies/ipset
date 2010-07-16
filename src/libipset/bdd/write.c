@@ -158,8 +158,10 @@ save_visit_node(GDataOutputStream *dstream,
 
 
 gboolean
-ipset_node_save(GOutputStream *stream, ipset_node_id_t node,
-                GError **err)
+ipset_node_cache_save(GOutputStream *stream,
+                      ipset_node_cache_t *cache,
+                      ipset_node_id_t node,
+                      GError **err)
 {
     g_return_val_if_fail(err == NULL || *err == NULL, FALSE);
 
