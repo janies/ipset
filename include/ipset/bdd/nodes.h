@@ -93,7 +93,8 @@ ipset_node_memory_size(ipset_node_id_t node);
  */
 
 gboolean
-ipset_node_save(GOutputStream *stream, ipset_node_id_t node);
+ipset_node_save(GOutputStream *stream, ipset_node_id_t node,
+                GError **error);
 
 
 /*-----------------------------------------------------------------------

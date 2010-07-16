@@ -580,7 +580,7 @@ START_TEST(test_bdd_save_1)
     GMemoryOutputStream  *mstream =
         G_MEMORY_OUTPUT_STREAM(stream);
 
-    fail_unless(ipset_node_save(stream, node),
+    fail_unless(ipset_node_save(stream, node, NULL),
                 "Cannot serialize BDD");
 
     const char  *raw_expected =
@@ -648,7 +648,7 @@ START_TEST(test_bdd_save_2)
     GMemoryOutputStream  *mstream =
         G_MEMORY_OUTPUT_STREAM(stream);
 
-    fail_unless(ipset_node_save(stream, node),
+    fail_unless(ipset_node_save(stream, node, NULL),
                 "Cannot serialize BDD");
 
     const char  *raw_expected =
@@ -682,6 +682,43 @@ START_TEST(test_bdd_save_2)
     fail_unless(memcmp(raw_expected, buf, expected_length) == 0,
                 "Serialized BDD has incorrect data");
 
+    g_object_unref(stream);
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+START_TEST(test_bdd_bad_save_1)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = TRUE
+     */
+
+    ipset_node_id_t  node =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    /*
+     * Serialize the BDD into a buffer that's too small, and verify
+     * that we get an error.
+     */
+
+    const gsize  buf_len = 16;
+    guint8  buf[16];
+
+    GOutputStream  *stream =
+        g_memory_output_stream_new(buf, buf_len, NULL, NULL);
+
+    GError  *error = NULL;
+    ipset_node_save(stream, node, &error);
+
+    fail_unless(error != NULL,
+                "Should get error when serializing "
+                "into a small buffer");
+
+    g_error_free(error);
     g_object_unref(stream);
     ipset_node_cache_free(cache);
 }
@@ -728,6 +765,7 @@ test_suite()
     TCase  *tc_save = tcase_create("save");
     tcase_add_test(tc_save, test_bdd_save_1);
     tcase_add_test(tc_save, test_bdd_save_2);
+    tcase_add_test(tc_save, test_bdd_bad_save_1);
     suite_add_tcase(s, tc_save);
 
     return s;

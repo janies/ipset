@@ -20,15 +20,25 @@ static const gsize  MAGIC_NUMBER_LENGTH = 6;
 
 
 /**
- * A helper method that checks the result of a Boolean expression, and
- * returns FALSE if the expression is FALSE.
+ * A helper method that calls a function that expects a GError
+ * location as its last parameter.  If the function raises an error,
+ * that error is propagated into the “err” parameter (which should be
+ * the last parameter of the enclosing function).  We then “return”
+ * the desired value by assigning it to the “result” variable (which
+ * you must define), and branching to a label called “error” (which
+ * you must also define), which can contain any cleanup code (this
+ * equivalent of a finally block).
  */
 
-#define CHECK(expr)                             \
+#define TRY_OR_RETURN(result_val, func, ...)    \
     G_STMT_START {                              \
-        if (!(expr))                            \
+        GError  *suberror = NULL;               \
+        func(__VA_ARGS__, &suberror);           \
+        if (suberror != NULL)                   \
         {                                       \
-            return FALSE;                       \
+            g_propagate_error(err, suberror);   \
+            result = (result_val);              \
+            goto error;                         \
         }                                       \
     } G_STMT_END
 
@@ -56,15 +66,18 @@ serialized_id_t
 save_visit_node(GDataOutputStream *dstream,
                 GHashTable *serialized_ids,
                 serialized_id_t *next_serialized_id,
-                ipset_node_id_t node_id)
+                ipset_node_id_t node_id,
+                GError **err)
 {
+    serialized_id_t  result;
+
     /*
      * Check whether we've already serialized this node.
      */
 
     gpointer  serialized_ptr =
         g_hash_table_lookup(serialized_ids, node_id);
-    serialized_id_t  serialized_id = GPOINTER_TO_INT(serialized_ptr);
+    result = GPOINTER_TO_INT(serialized_ptr);
 
     if (serialized_ptr == NULL)
     {
@@ -82,9 +95,10 @@ save_visit_node(GDataOutputStream *dstream,
 
         if (ipset_node_get_type(node->low) == IPSET_NONTERMINAL_NODE)
         {
-            serialized_low =
-                save_visit_node(dstream, serialized_ids,
-                                next_serialized_id, node->low);
+            TRY_OR_RETURN(0,
+                          serialized_low = save_visit_node,
+                          dstream, serialized_ids,
+                          next_serialized_id, node->low);
         } else {
             serialized_low =
                 ipset_terminal_value(node->low);
@@ -94,9 +108,10 @@ save_visit_node(GDataOutputStream *dstream,
 
         if (ipset_node_get_type(node->high) == IPSET_NONTERMINAL_NODE)
         {
-            serialized_high =
-                save_visit_node(dstream, serialized_ids,
-                                next_serialized_id, node->high);
+            TRY_OR_RETURN(0,
+                          serialized_high = save_visit_node,
+                          dstream, serialized_ids,
+                          next_serialized_id, node->high);
         } else {
             serialized_high =
                 ipset_terminal_value(node->high);
@@ -106,18 +121,21 @@ save_visit_node(GDataOutputStream *dstream,
          * Output the current node
          */
 
-        serialized_id = (*next_serialized_id)--;
+        result = (*next_serialized_id)--;
         g_d_debug("Outputing node %p as serialized node %d"
                   " = (%u,%d,%d)",
-                  node_id, serialized_id,
+                  node_id, result,
                   node->variable, serialized_low, serialized_high);
 
-        CHECK(g_data_output_stream_put_byte
-              (dstream, node->variable, NULL, NULL));
-        CHECK(g_data_output_stream_put_int32
-              (dstream, serialized_low, NULL, NULL));
-        CHECK(g_data_output_stream_put_int32
-              (dstream, serialized_high, NULL, NULL));
+        TRY_OR_RETURN(0,
+                      g_data_output_stream_put_byte,
+                      dstream, node->variable, NULL);
+        TRY_OR_RETURN(0,
+                      g_data_output_stream_put_int32,
+                      dstream, serialized_low, NULL);
+        TRY_OR_RETURN(0,
+                      g_data_output_stream_put_int32,
+                      dstream, serialized_high, NULL);
 
         /*
          * Save the serialized ID in the hash table, so that we don't
@@ -125,17 +143,29 @@ save_visit_node(GDataOutputStream *dstream,
          */
 
         g_hash_table_insert(serialized_ids, node_id,
-                            GINT_TO_POINTER(serialized_id));
+                            GINT_TO_POINTER(result));
     }
 
-    return serialized_id;
+    return result;
+
+  error:
+    /*
+     * There's no cleanup to do on an error.
+     */
+
+    return result;
 }
 
 
 gboolean
-ipset_node_save(GOutputStream *stream, ipset_node_id_t node)
+ipset_node_save(GOutputStream *stream, ipset_node_id_t node,
+                GError **err)
 {
+    g_return_val_if_fail(err == NULL || *err == NULL, FALSE);
+
+    gboolean  result = FALSE;
     gsize bytes_written;
+    GHashTable  *serialized_ids = NULL;
 
     /*
      * Create a GDataOutputStream to output the binary data.
@@ -150,13 +180,15 @@ ipset_node_save(GOutputStream *stream, ipset_node_id_t node)
      * format version that we're going to write.
      */
 
-    CHECK(g_output_stream_write_all
-          (G_OUTPUT_STREAM(dstream),
-           MAGIC_NUMBER, MAGIC_NUMBER_LENGTH,
-           &bytes_written, NULL, NULL));
+    TRY_OR_RETURN(FALSE,
+                  g_output_stream_write_all,
+                  G_OUTPUT_STREAM(dstream),
+                  MAGIC_NUMBER, MAGIC_NUMBER_LENGTH,
+                  &bytes_written, NULL);
 
-    CHECK(g_data_output_stream_put_uint16
-          (dstream, 0x0001, NULL, NULL));
+    TRY_OR_RETURN(FALSE,
+                  g_data_output_stream_put_uint16,
+                  dstream, 0x0001, NULL);
 
     /*
      * The rest of the output depends on whether the root is terminal
@@ -179,12 +211,15 @@ ipset_node_save(GOutputStream *stream, ipset_node_id_t node)
 
         ipset_range_t  value = ipset_terminal_value(node);
 
-        CHECK(g_data_output_stream_put_uint64
-              (dstream, set_size, NULL, NULL));
-        CHECK(g_data_output_stream_put_uint32
-              (dstream, 0, NULL, NULL));
-        CHECK(g_data_output_stream_put_uint32
-              (dstream, value, NULL, NULL));
+        TRY_OR_RETURN(FALSE,
+                      g_data_output_stream_put_uint64,
+                      dstream, set_size, NULL);
+        TRY_OR_RETURN(FALSE,
+                      g_data_output_stream_put_uint32,
+                      dstream, 0, NULL);
+        TRY_OR_RETURN(FALSE,
+                      g_data_output_stream_put_uint32,
+                      dstream, value, NULL);
 
         g_object_unref(dstream);
         return TRUE;
@@ -208,10 +243,12 @@ ipset_node_save(GOutputStream *stream, ipset_node_id_t node)
               sizeof(guint32)        /*   high pointer */
              ));
 
-        CHECK(g_data_output_stream_put_uint64
-              (dstream, set_size, NULL, NULL));
-        CHECK(g_data_output_stream_put_uint32
-              (dstream, nonterminal_count, NULL, NULL));
+        TRY_OR_RETURN(FALSE,
+                      g_data_output_stream_put_uint64,
+                      dstream, set_size, NULL);
+        TRY_OR_RETURN(FALSE,
+                      g_data_output_stream_put_uint32,
+                      dstream, nonterminal_count, NULL);
 
         /*
          * The serialized node IDs are different than the in-memory
@@ -219,15 +256,32 @@ ipset_node_save(GOutputStream *stream, ipset_node_id_t node)
          * need a mapping from internal node ID to serialized node ID.
          */
 
-        GHashTable  *serialized_ids = g_hash_table_new(NULL, NULL);
+        serialized_ids = g_hash_table_new(NULL, NULL);
         serialized_id_t  next_serialized_id = -1;
 
-        serialized_id_t  last_serialized_id =
-            save_visit_node(dstream, serialized_ids,
-                            &next_serialized_id, node);
+        serialized_id_t  last_serialized_id;
+
+        TRY_OR_RETURN(FALSE,
+                      last_serialized_id = save_visit_node,
+                      dstream, serialized_ids,
+                      &next_serialized_id, node);
 
         g_hash_table_destroy(serialized_ids);
         g_object_unref(dstream);
         return (last_serialized_id < 0);
     }
+
+  error:
+    /*
+     * If there's an error, clean up the objects that we've created
+     * before returning.
+     */
+
+    if (dstream != NULL)
+        g_object_unref(dstream);
+
+    if (serialized_ids != NULL)
+        g_hash_table_destroy(serialized_ids);
+
+    return result;
 }
