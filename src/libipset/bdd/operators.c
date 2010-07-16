@@ -61,18 +61,44 @@ ipset_binary_key_commutative(ipset_binary_key_t *key,
 
 
 /**
+ * A function that defines how the BDD operation is applied to two
+ * terminal nodes.
+ */
+
+typedef ipset_range_t
+(*operator_func_t)(ipset_range_t lhs_value,
+                   ipset_range_t rhs_value);
+
+
+// forward declaration
+
+static ipset_node_id_t
+cached_op(ipset_node_cache_t *cache,
+          GHashTable *op_cache,
+          operator_func_t op,
+          const char *op_name,
+          ipset_node_id_t lhs,
+          ipset_node_id_t rhs);
+
+
+/**
  * Recurse down one subtree (the LHS).
  */
 
 static ipset_node_id_t
 recurse_left(ipset_node_cache_t *cache,
+             GHashTable *op_cache,
+             operator_func_t op,
+             const char *op_name,
              ipset_node_t *lhs_node,
              ipset_node_id_t rhs)
 {
     ipset_node_id_t  result_low =
-        ipset_node_cache_and(cache, lhs_node->low, rhs);
+        cached_op(cache, op_cache, op, op_name,
+                  lhs_node->low, rhs);
     ipset_node_id_t  result_high =
-        ipset_node_cache_and(cache, lhs_node->high, rhs);
+        cached_op(cache, op_cache, op, op_name,
+                  lhs_node->high, rhs);
 
     return ipset_node_cache_nonterminal
         (cache, lhs_node->variable, result_low, result_high);
@@ -85,13 +111,18 @@ recurse_left(ipset_node_cache_t *cache,
 
 static ipset_node_id_t
 recurse_both(ipset_node_cache_t *cache,
+             GHashTable *op_cache,
+             operator_func_t op,
+             const char *op_name,
              ipset_node_t *lhs_node,
              ipset_node_t *rhs_node)
 {
     ipset_node_id_t  result_low =
-        ipset_node_cache_and(cache, lhs_node->low, rhs_node->low);
+        cached_op(cache, op_cache, op, op_name,
+                  lhs_node->low, rhs_node->low);
     ipset_node_id_t  result_high =
-        ipset_node_cache_and(cache, lhs_node->high, rhs_node->high);
+        cached_op(cache, op_cache, op, op_name,
+                  lhs_node->high, rhs_node->high);
 
     return ipset_node_cache_nonterminal
         (cache, lhs_node->variable, result_low, result_high);
@@ -99,13 +130,16 @@ recurse_both(ipset_node_cache_t *cache,
 
 
 /**
- * Perform an actual AND operation.
+ * Perform an actual binary operation.
  */
 
 static ipset_node_id_t
-apply_and(ipset_node_cache_t *cache,
-          ipset_node_id_t lhs,
-          ipset_node_id_t rhs)
+apply_op(ipset_node_cache_t *cache,
+         GHashTable *op_cache,
+         operator_func_t op,
+         const char *op_name,
+         ipset_node_id_t lhs,
+         ipset_node_id_t rhs)
 {
     if (ipset_node_get_type(lhs) == IPSET_TERMINAL_NODE)
     {
@@ -120,7 +154,7 @@ apply_and(ipset_node_cache_t *cache,
 
             ipset_range_t  lhs_value = ipset_terminal_value(lhs);
             ipset_range_t  rhs_value = ipset_terminal_value(rhs);
-            ipset_range_t  new_value = lhs_value & rhs_value;
+            ipset_range_t  new_value = op(lhs_value, rhs_value);
 
             return ipset_node_cache_terminal(cache, new_value);
         } else {
@@ -131,7 +165,8 @@ apply_and(ipset_node_cache_t *cache,
              */
 
             ipset_node_t  *rhs_node = ipset_nonterminal_node(rhs);
-            return recurse_left(cache, rhs_node, lhs);
+            return recurse_left(cache, op_cache, op, op_name,
+                                rhs_node, lhs);
         }
     } else {
         if (ipset_node_get_type(rhs) == IPSET_TERMINAL_NODE)
@@ -143,7 +178,8 @@ apply_and(ipset_node_cache_t *cache,
              */
 
             ipset_node_t  *lhs_node = ipset_nonterminal_node(lhs);
-            return recurse_left(cache, lhs_node, rhs);
+            return recurse_left(cache, op_cache, op, op_name,
+                                lhs_node, rhs);
         } else {
             /*
              * When both nodes are nonterminal, the way we recurse
@@ -158,28 +194,38 @@ apply_and(ipset_node_cache_t *cache,
 
             if (lhs_node->variable == rhs_node->variable)
             {
-                return recurse_both(cache, lhs_node, rhs_node);
+                return recurse_both(cache, op_cache, op, op_name,
+                                    lhs_node, rhs_node);
             } else if (lhs_node->variable < rhs_node->variable) {
-                return recurse_left(cache, lhs_node, rhs);
+                return recurse_left(cache, op_cache, op, op_name,
+                                    lhs_node, rhs);
             } else {
-                return recurse_left(cache, rhs_node, lhs);
+                return recurse_left(cache, op_cache, op, op_name,
+                                    rhs_node, lhs);
             }
         }
     }
 }
 
 
-ipset_node_id_t
-ipset_node_cache_and(ipset_node_cache_t *cache,
-                     ipset_node_id_t lhs,
-                     ipset_node_id_t rhs)
+/**
+ * Perform an actual binary operation, checking the cache first.
+ */
+
+static ipset_node_id_t
+cached_op(ipset_node_cache_t *cache,
+          GHashTable *op_cache,
+          operator_func_t op,
+          const char *op_name,
+          ipset_node_id_t lhs,
+          ipset_node_id_t rhs)
 {
     /*
      * Check to see if we've already performed the operation on these
      * operands.
      */
 
-    g_debug("Applying AND(%p, %p)", lhs, rhs);
+    g_debug("Applying %s(%p, %p)", op_name, lhs, rhs);
 
     ipset_binary_key_t  search_key;
     ipset_binary_key_commutative(&search_key, lhs, rhs);
@@ -187,7 +233,7 @@ ipset_node_cache_and(ipset_node_cache_t *cache,
     gpointer  found_key;
     gpointer  found_result;
     gboolean  node_exists =
-        g_hash_table_lookup_extended(cache->and_cache,
+        g_hash_table_lookup_extended(op_cache,
                                      &search_key,
                                      &found_key,
                                      &found_result);
@@ -211,10 +257,45 @@ ipset_node_cache_and(ipset_node_cache_t *cache,
             g_slice_new(ipset_binary_key_t);
         memcpy(real_key, &search_key, sizeof(ipset_binary_key_t));
 
-        ipset_node_id_t  result = apply_and(cache, lhs, rhs);
+        ipset_node_id_t  result =
+            apply_op(cache, op_cache, op, op_name, lhs, rhs);
         g_debug("NEW result = %p", result);
 
-        g_hash_table_insert(cache->and_cache, real_key, result);
+        g_hash_table_insert(op_cache, real_key, result);
         return result;
     }
+}
+
+
+static ipset_range_t
+and_op(ipset_range_t lhs_value, ipset_range_t rhs_value)
+{
+    return (lhs_value & rhs_value);
+}
+
+
+ipset_node_id_t
+ipset_node_cache_and(ipset_node_cache_t *cache,
+                     ipset_node_id_t lhs,
+                     ipset_node_id_t rhs)
+{
+    return cached_op(cache, cache->and_cache, and_op, "AND",
+                     lhs, rhs);
+}
+
+
+static ipset_range_t
+or_op(ipset_range_t lhs_value, ipset_range_t rhs_value)
+{
+    return (lhs_value | rhs_value);
+}
+
+
+ipset_node_id_t
+ipset_node_cache_or(ipset_node_cache_t *cache,
+                    ipset_node_id_t lhs,
+                    ipset_node_id_t rhs)
+{
+    return cached_op(cache, cache->or_cache, or_op, "OR",
+                     lhs, rhs);
 }

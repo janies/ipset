@@ -388,6 +388,121 @@ START_TEST(test_bdd_and_evaluate_1)
 END_TEST
 
 
+START_TEST(test_bdd_or_reduced_1)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = x[0] ∧ x[1]
+     */
+
+    ipset_node_id_t  n_false0 =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true0 =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  node00 =
+        ipset_node_cache_nonterminal(cache, 0, n_false0, n_true0);
+    ipset_node_id_t  node01 =
+        ipset_node_cache_nonterminal(cache, 1, n_false0, n_true0);
+    ipset_node_id_t  node0 =
+        ipset_node_cache_or(cache, node00, node01);
+
+    /*
+     * And then do it again.
+     */
+
+    ipset_node_id_t  n_false1 =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true1 =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  node10 =
+        ipset_node_cache_nonterminal(cache, 0, n_false1, n_true1);
+    ipset_node_id_t  node11 =
+        ipset_node_cache_nonterminal(cache, 1, n_false1, n_true1);
+    ipset_node_id_t  node1 =
+        ipset_node_cache_or(cache, node10, node11);
+
+    /*
+     * Verify that we get the same physical node both times.
+     */
+
+    fail_unless(node0 == node1,
+                "OR operator result isn't reduced");
+
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+START_TEST(test_bdd_or_evaluate_1)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = x[0] ∧ x[1]
+     */
+
+    ipset_node_id_t  n_false =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  node0 =
+        ipset_node_cache_nonterminal(cache, 0, n_false, n_true);
+    ipset_node_id_t  node1 =
+        ipset_node_cache_nonterminal(cache, 1, n_false, n_true);
+    ipset_node_id_t  node =
+        ipset_node_cache_or(cache, node0, node1);
+
+    /*
+     * And test we can get the right results out of it.
+     */
+
+    gboolean  input1[] = { TRUE, TRUE };
+    gboolean  expected1 = TRUE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bool_array_assignment,
+                                    input1)
+                == expected1,
+                "BDD evaluates to wrong value");
+
+    gboolean  input2[] = { TRUE, FALSE };
+    gboolean  expected2 = TRUE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bool_array_assignment,
+                                    input2)
+                == expected2,
+                "BDD evaluates to wrong value");
+
+    gboolean  input3[] = { FALSE, TRUE };
+    gboolean  expected3 = TRUE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bool_array_assignment,
+                                    input3)
+                == expected3,
+                "BDD evaluates to wrong value");
+
+    gboolean  input4[] = { FALSE, FALSE };
+    gboolean  expected4 = FALSE;
+
+    fail_unless(ipset_node_evaluate(node,
+                                    ipset_bool_array_assignment,
+                                    input4)
+                == expected4,
+                "BDD evaluates to wrong value");
+
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
 /*-----------------------------------------------------------------------
  * Testing harness
  */
@@ -417,6 +532,8 @@ test_suite()
     TCase  *tc_operators = tcase_create("operators");
     tcase_add_test(tc_operators, test_bdd_and_reduced_1);
     tcase_add_test(tc_operators, test_bdd_and_evaluate_1);
+    tcase_add_test(tc_operators, test_bdd_or_reduced_1);
+    tcase_add_test(tc_operators, test_bdd_or_evaluate_1);
     suite_add_tcase(s, tc_operators);
 
     return s;

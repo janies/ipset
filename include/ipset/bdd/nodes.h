@@ -173,6 +173,12 @@ typedef struct ipset_node_cache
 
     GHashTable  *and_cache;
 
+    /**
+     * A cache of the results of the OR operation.
+     */
+
+    GHashTable  *or_cache;
+
 } ipset_node_cache_t;
 
 /**
@@ -276,6 +282,15 @@ ipset_node_id_t
 ipset_node_cache_and(ipset_node_cache_t *cache,
                      ipset_node_id_t lhs,
                      ipset_node_id_t rhs);
+
+/**
+ * Calculate the logical OR (∨) of two BDDs.
+ */
+
+ipset_node_id_t
+ipset_node_cache_or(ipset_node_cache_t *cache,
+                    ipset_node_id_t lhs,
+                    ipset_node_id_t rhs);
 
 
 /*-----------------------------------------------------------------------
