@@ -8,61 +8,56 @@
  * ----------------------------------------------------------------------
  */
 
-#include <cudd.h>
+#include <glib.h>
+
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
 
 void
 IPMAP_NAME(set_network)(ip_map_t *map,
-                        void *elem,
-                        int netmask,
-                        intptr_t value)
+                        gpointer elem,
+                        guint netmask,
+                        gint value)
 {
-    DdNode  *elem_add;
-    DdNode  *value_add;
-    DdNode  *new_map_add;
+    ipset_node_id_t  elem_bdd;
+    ipset_node_id_t  value_bdd;
+    ipset_node_id_t  new_map_bdd;
 
     /*
-     * First, construct the ADD that represents this IP address —
+     * First, construct the BDD that represents this IP address —
      * i.e., where each boolean variable is assigned TRUE or FALSE
      * depending on whether the corresponding bit is set in the
      * address.
      */
 
-    elem_add = IPMAP_NAME(make_ip_add)(elem, netmask);
+    elem_bdd = IPSET_NAME(make_ip_bdd)(elem, netmask);
 
     /*
-     * Next, create a new constant ADD to represent the value.
+     * Next, create a new constant BDD to represent the value.
      */
 
-    value_add = Cudd_addConst(ipset_manager, value);
-    Cudd_Ref(value_add);
+    value_bdd = ipset_node_cache_terminal(ipset_cache, value);
 
     /*
-     * Add elem to the map by constructing an if-then-else ADD.  If
-     * the variables evaluate just like in elem_add (signifying that
+     * Add elem to the map by constructing an if-then-else BDD.  If
+     * the variables evaluate just like in elem_bdd (signifying that
      * the address is the same/in the same network), then we point to
-     * the value_add to get the value of the function; otherwise we
-     * point at the previous map's ADD.  This ensures that any
+     * the value_bdd to get the value of the function; otherwise we
+     * point at the previous map's BDD.  This ensures that any
      * previous values that aren't overwritten by the new IP network
      * address keep the same value as before.
      */
 
-    new_map_add = Cudd_addIte(ipset_manager, elem_add,
-                              value_add, map->map_add);
-    Cudd_Ref(new_map_add);
+    new_map_bdd = ipset_node_cache_ite
+        (ipset_cache, elem_bdd, value_bdd, map->map_bdd);
 
     /*
-     * Store the map's new ADD into the map struct.  Dereference the
-     * old map and the element's ADD, since we don't need them
-     * anymore.
+     * Store the map's new BDD into the map struct.
      */
 
-    Cudd_RecursiveDeref(ipset_manager, elem_add);
-    Cudd_RecursiveDeref(ipset_manager, value_add);
-    Cudd_RecursiveDeref(ipset_manager, map->map_add);
-    map->map_add = new_map_add;
+    map->map_bdd = new_map_bdd;
 
     /*
      * And return...
@@ -73,25 +68,7 @@ IPMAP_NAME(set_network)(ip_map_t *map,
 
 
 void
-IPMAP_NAME(set)(ip_map_t *map, void *elem, intptr_t value)
+IPMAP_NAME(set)(ip_map_t *map, gpointer elem, gint value)
 {
     return IPMAP_NAME(set_network)(map, elem, IP_BIT_SIZE, value);
-}
-
-
-void
-IPMAP_NAME(set_network_ptr)(ip_map_t *map,
-                            void *elem,
-                            int netmask,
-                            void *value)
-{
-    return IPMAP_NAME(set_network)(map, elem, netmask,
-                                   (intptr_t) value);
-}
-
-
-void
-IPMAP_NAME(set_ptr)(ip_map_t *map, void *elem, void *value)
-{
-    return IPMAP_NAME(set)(map, elem, (intptr_t) value);
 }

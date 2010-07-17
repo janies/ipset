@@ -8,25 +8,24 @@
  * ----------------------------------------------------------------------
  */
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <glib.h>
 
-#include <cudd.h>
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
-bool
+gboolean
 ipset_is_empty(ip_set_t *set)
 {
     /*
      * Since BDDs are unique, the only empty set is the “false” BDD.
      */
 
-    return (set->set_bdd == Cudd_ReadLogicZero(ipset_manager));
+    return (set->set_bdd ==
+            ipset_node_cache_terminal(ipset_cache, FALSE));
 }
 
-bool
+gboolean
 ipset_is_equal(ip_set_t *set1, ip_set_t *set2)
 {
     /*
@@ -37,7 +36,7 @@ ipset_is_equal(ip_set_t *set1, ip_set_t *set2)
     return (set1->set_bdd == set2->set_bdd);
 }
 
-bool
+gboolean
 ipset_is_not_equal(ip_set_t *set1, ip_set_t *set2)
 {
     /*
@@ -48,8 +47,8 @@ ipset_is_not_equal(ip_set_t *set1, ip_set_t *set2)
     return (set1->set_bdd != set2->set_bdd);
 }
 
-size_t
+gsize
 ipset_memory_size(ip_set_t *set)
 {
-    return sizeof(DdNode) * Cudd_DagSize(set->set_bdd);
+    return ipset_node_memory_size(set->set_bdd);
 }

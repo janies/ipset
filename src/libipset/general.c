@@ -8,32 +8,26 @@
  * ----------------------------------------------------------------------
  */
 
-#include <stdbool.h>
-#include <stdio.h>
+#include <glib.h>
 
-#include <cudd.h>
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
-DdManager *
-ipset_manager = NULL;
 
-int ipset_init_library()
+ipset_node_cache_t *
+ipset_cache = NULL;
+
+
+int
+ipset_init_library()
 {
-    if (ipset_manager == NULL)
+    if (G_UNLIKELY(ipset_cache == NULL))
     {
-        ipset_manager = Cudd_Init(0, 0,
-                                  CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS,
-                                  0);
+        ipset_cache = ipset_node_cache_new();
 
-        if (ipset_manager == NULL)
+        if (ipset_cache == NULL)
             return 1;
-
-        ipmap_ipv4_init_add_vars();
-        ipmap_ipv6_init_add_vars();
-
-        ipset_ipv4_init_bdd_vars();
-        ipset_ipv6_init_bdd_vars();
 
         return 0;
     } else {

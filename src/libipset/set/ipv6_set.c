@@ -21,16 +21,16 @@
 
 
 /**
- * The name of the ipvX_set_t type.
- */
-
-#define IP_SET_T ipv6_set_t
-
-/**
  * The number of bits in an IPvX address.
  */
 
 #define IP_BIT_SIZE  IPV6_BIT_SIZE
+
+/**
+ * The value of the discriminator variable for an IPvX address.
+ */
+
+#define IP_DISCRIMINATOR_VALUE  FALSE
 
 /**
  * Creates a identifier of the form “ipset_ipv6_<basename>”.

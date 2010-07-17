@@ -32,8 +32,8 @@ def build(bld):
             features = "cc cprogram",
             source = "%s.c" % test_name,
             target = test_name,
-            uselib = "GLIB GIO CUDD CHECK",
-            uselib_local = "libipset",
+            uselib = "GLIB GIO CHECK",
+            uselib_local = "ipset",
             install_path = None,
             includes = [
                 "../include",

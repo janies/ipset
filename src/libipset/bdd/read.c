@@ -129,7 +129,7 @@ load_v1(GDataInputStream *dstream,
         sizeof(guint16) -
         sizeof(guint64);
 
-    g_debug("Length cap is %zu bytes.", length);
+    g_debug("Length cap is %" G_GSIZE_FORMAT " bytes.", cap);
 
     /*
      * Read in the number of nonterminals.

@@ -8,47 +8,53 @@
  * ----------------------------------------------------------------------
  */
 
-#include <stdio.h>
+#include <glib.h>
 
-#include <cudd.h>
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
 
-intptr_t
-IPMAP_NAME(get)(ip_map_t *map, void *elem)
+/**
+ * Given a BDD variable number, return the index of the corresponding
+ * bit in an IP address.  IPv4 addresses use variables 1-32; IPv6
+ * addresses use 1-128.  (Variable 0 is used to identify the kind of
+ * address — TRUE for IPv4, FALSE for IPv6.)
+ */
+
+static guint
+IPMAP_NAME(bit_for_var)(ipset_variable_t var)
 {
-    DdNode  *elem_add;
-    DdNode  *result_add;
-
-    /*
-     * First, construct the ADD that represents this IP address —
-     * i.e., where each boolean variable is assigned TRUE or FALSE
-     * depending on whether the corresponding bit is set in the
-     * address.
-     */
-
-    elem_add = IPMAP_NAME(make_ip_add)(elem, IP_BIT_SIZE);
-
-    /*
-     * Then, evaluate the map's ADD with the elem ADD to get the
-     * resulting value.
-     */
-
-    result_add = Cudd_addEvalConst(ipset_manager, elem_add,
-                                   map->map_add);
-
-    /*
-     * We don't have to reference or derefernce the result ADD, since
-     * we're just going to immediately return the result.
-     */
-
-    return Cudd_V(result_add);
+    return (var - 1);
 }
 
 
-void *
-IPMAP_NAME(get_ptr)(ip_map_t *map, void *elem)
+/**
+ * An assignment function that can be used to evaluate an IP map BDD.
+ */
+
+static gboolean
+IPMAP_NAME(assignment)(gconstpointer user_data, ipset_variable_t var)
 {
-    return (void *) IPMAP_NAME(get_ptr)(map, elem);
+    if (var == 0)
+    {
+        return IP_DISCRIMINATOR_VALUE;
+    } else {
+        guint8  *addr = (guint8 *) user_data;
+
+        guint  bit = IPMAP_NAME(bit_for_var)(var);
+        guint  byte_index = bit / 8;
+        guint  bit_number = bit % 8;
+        guint  bit_mask = 0x80 >> bit_number;
+
+        return ((addr[byte_index] & bit_mask) != 0);
+    }
+}
+
+
+gint
+IPMAP_NAME(get)(ip_map_t *map, gpointer elem)
+{
+    return ipset_node_evaluate
+        (map->map_bdd, IPMAP_NAME(assignment), elem);
 }

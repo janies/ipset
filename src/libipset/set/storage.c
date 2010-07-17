@@ -11,42 +11,41 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <cudd.h>
-#include <dddmp.h>
+#include <glib.h>
+#include <gio/gio.h>
+
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
 
-bool
-ipset_save(ip_set_t *set, FILE *file)
+gboolean
+ipset_save(GOutputStream *stream,
+           ip_set_t *set,
+           GError **err)
 {
-    return
-        Dddmp_cuddBddStore(ipset_manager, NULL, set->set_bdd,
-                           NULL, NULL,
-                           DDDMP_MODE_TEXT,
-                           DDDMP_VARIDS,
-                           NULL, file);
+    return ipset_node_cache_save
+        (stream, ipset_cache, set->set_bdd, err);
 }
 
 
 ip_set_t *
-ipset_load(FILE *file)
+ipset_load(GInputStream *stream,
+           GError **err)
 {
     ip_set_t  *set;
-    DdNode  *node;
+    ipset_node_id_t  node;
 
     set = ipset_new();
     if (set == NULL) return NULL;
 
-    node =
-        Dddmp_cuddBddLoad(ipset_manager,
-                          DDDMP_VAR_MATCHIDS,
-                          NULL, NULL, NULL,
-                          DDDMP_MODE_TEXT,
-                          NULL, file);
+    GError  *suberror = NULL;
 
-    if (node == NULL)
+    node = ipset_node_cache_load
+        (stream, ipset_cache, &suberror);
+    if (suberror != NULL)
     {
+        g_propagate_error(err, suberror);
         ipset_free(set);
         return NULL;
     }

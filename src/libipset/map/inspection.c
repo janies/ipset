@@ -8,48 +8,47 @@
  * ----------------------------------------------------------------------
  */
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <glib.h>
 
-#include <cudd.h>
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
+#include <ipset/internal.h>
 
-bool
+gboolean
 ipmap_is_empty(ip_map_t *map)
 {
     /*
-     * Since ADDs are unique, any map that maps all addresses to the
+     * Since BDDs are unique, any map that maps all addresses to the
      * default value is “empty”.
      */
 
-    return (map->map_add == map->default_add);
+    return (map->map_bdd == map->default_bdd);
 }
 
-bool
+gboolean
 ipmap_is_equal(ip_map_t *map1, ip_map_t *map2)
 {
     /*
-     * Since ADDs are unique, maps can only be equal if their ADDs are
+     * Since BDDs are unique, maps can only be equal if their BDDs are
      * equal.
      */
 
-    return (map1->map_add == map2->map_add);
+    return (map1->map_bdd == map2->map_bdd);
 }
 
-bool
+gboolean
 ipmap_is_not_equal(ip_map_t *map1, ip_map_t *map2)
 {
     /*
-     * Since ADDs are unique, maps can only be equal if their ADDs are
+     * Since BDDs are unique, maps can only be equal if their BDDs are
      * equal.
      */
 
-    return (map1->map_add != map2->map_add);
+    return (map1->map_bdd != map2->map_bdd);
 }
 
-size_t
+gsize
 ipmap_memory_size(ip_map_t *map)
 {
-    return sizeof(DdNode) * Cudd_DagSize(map->map_add);
+    return ipset_node_memory_size(map->map_bdd);
 }

@@ -8,67 +8,101 @@
  * ----------------------------------------------------------------------
  */
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <glib.h>
 
-#include <cudd.h>
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
+#include <ipset/logging.h>
 
 
-DdNode *IPSET_NAME(bdd_var)[IP_BIT_SIZE];
+/**
+ * Return the BDD variable number for the given bit of an IP address.
+ * IPv4 addresses use variables 1-32; IPv6 addresses use 1-128.
+ * (Variable 0 is used to identify the kind of address — TRUE for
+ * IPv4, FALSE for IPv6.)
+ */
 
-
-void
-IPSET_NAME(init_bdd_vars)()
+static ipset_variable_t
+IPSET_NAME(var_for_bit)(guint bit)
 {
-    unsigned int  i;
-
-    for (i = 0; i < IP_BIT_SIZE; i++)
-    {
-        IPSET_NAME(bdd_var)[i] = Cudd_bddNewVar(ipset_manager);
-    }
+    return (bit + 1);
 }
 
 
-DdNode *
-IPSET_NAME(make_ip_bdd)(void *vaddr, int netmask)
+ipset_node_id_t
+IPSET_NAME(make_ip_bdd)(gpointer vaddr, guint netmask)
 {
-    uint8_t  *addr = (uint8_t *) vaddr;
-    DdNode  *result = Cudd_ReadOne(ipset_manager);
-    int  i;
+    guint8  *addr = (guint8 *) vaddr;
 
     /*
      * Special case — the BDD for a netmask that's out of range never
      * evaluates to true.
      */
 
-    if ((netmask <= 0) || (netmask > IP_BIT_SIZE))
+    if ((netmask == 0) || (netmask > IP_BIT_SIZE))
     {
-        return Cudd_ReadLogicZero(ipset_manager);
+        return ipset_node_cache_terminal(ipset_cache, FALSE);
     }
 
-    Cudd_Ref(result);
-    for (i = 0; i < netmask; i++)
-    {
-        int  byte_index = i / 8;
-        int  bit_number = i % 8;
-        int  bit_mask = 0x80 >> bit_number;
-        DdNode  *this_bit;
-        DdNode  *next;
+    /*
+     * The end of the BDD node chain is the TRUE terminal, indicating
+     * that the address is in the set.
+     */
 
-        this_bit = IPSET_NAME(bdd_var)[i];
+    ipset_node_id_t  result =
+        ipset_node_cache_terminal(ipset_cache, TRUE);
+    ipset_node_id_t  false_node =
+        ipset_node_cache_terminal(ipset_cache, FALSE);
+
+    /*
+     * Since the BDD needs to be ordered, we have to iterate through
+     * the IP address's bits in reverse order.
+     */
+
+    gint  i;
+    for (i = netmask-1; i >= 0; i--)
+    {
+        gint  byte_index = i / 8;
+        gint  bit_number = i % 8;
+        gint  bit_mask = 0x80 >> bit_number;
+
+        ipset_variable_t  var = IPSET_NAME(var_for_bit)(i);
 
         if ((addr[byte_index] & bit_mask) == 0)
         {
-            this_bit = Cudd_Not(this_bit);
+            /*
+             * The bit is not set
+             */
+
+            g_d_debug("Bit %d (variable %u) is NOT set", i, var);
+
+            result = ipset_node_cache_nonterminal
+                (ipset_cache, var, result, false_node);
+        } else {
+            /*
+             * The bit is set
+             */
+
+            g_d_debug("Bit %d (variable %u) is SET", i, var);
+
+            result = ipset_node_cache_nonterminal
+                (ipset_cache, var, false_node, result);
         }
+    }
 
-        next = Cudd_bddAnd(ipset_manager, result, this_bit);
-        Cudd_Ref(next);
+    /*
+     * Lastly, we set variable 0 to TRUE to indicate that this is an
+     * IPv4 address.
+     */
 
-        Cudd_RecursiveDeref(ipset_manager, result);
-        result = next;
+    if (IP_DISCRIMINATOR_VALUE)
+    {
+        result = ipset_node_cache_nonterminal
+            (ipset_cache, 0, false_node, result);
+    } else {
+        result = ipset_node_cache_nonterminal
+            (ipset_cache, 0, result, false_node);
     }
 
     return result;

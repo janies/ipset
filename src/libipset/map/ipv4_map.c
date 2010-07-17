@@ -33,6 +33,18 @@
 #define IP_BIT_SIZE  IPV4_BIT_SIZE
 
 /**
+ * The value of the discriminator variable for an IPvX address.
+ */
+
+#define IP_DISCRIMINATOR_VALUE  TRUE
+
+/**
+ * Creates a identifier of the form “ipset_ipv4_<basename>”.
+ */
+
+#define IPSET_NAME(basename) ipset_ipv4_##basename
+
+/**
  * Creates a identifier of the form “ipmap_ipv4_<basename>”.
  */
 
@@ -44,5 +56,4 @@
  */
 
 #include "inspection-template.c.in"
-#include "internal-template.c.in"
 #include "modify-template.c.in"

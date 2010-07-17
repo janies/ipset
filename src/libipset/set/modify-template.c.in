@@ -8,17 +8,19 @@
  * ----------------------------------------------------------------------
  */
 
-#include <cudd.h>
+#include <glib.h>
+
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
 
-bool
-IPSET_NAME(add_network)(ip_set_t *set, void *elem, int netmask)
+gboolean
+IPSET_NAME(add_network)(ip_set_t *set, gpointer elem, guint netmask)
 {
-    DdNode  *elem_bdd;
-    DdNode  *new_set_bdd;
-    bool  elem_already_present;
+    ipset_node_id_t  elem_bdd;
+    ipset_node_id_t  new_set_bdd;
+    gboolean  elem_already_present;
 
     /*
      * First, construct the BDD that represents this IP address —
@@ -34,8 +36,8 @@ IPSET_NAME(add_network)(ip_set_t *set, void *elem, int netmask)
      * set and the new element's BDD.
      */
 
-    new_set_bdd = Cudd_bddOr(ipset_manager, set->set_bdd, elem_bdd);
-    Cudd_Ref(new_set_bdd);
+    new_set_bdd = ipset_node_cache_or
+        (ipset_cache, set->set_bdd, elem_bdd);
 
     /*
      * If the BDD representing the set hasn't changed, then the
@@ -45,13 +47,9 @@ IPSET_NAME(add_network)(ip_set_t *set, void *elem, int netmask)
     elem_already_present = (new_set_bdd == set->set_bdd);
 
     /*
-     * Store the set's new BDD into the set struct.  Dereference the
-     * old set and the element's BDD, since we don't need them
-     * anymore.
+     * Store the set's new BDD into the set struct.
      */
 
-    Cudd_RecursiveDeref(ipset_manager, elem_bdd);
-    Cudd_RecursiveDeref(ipset_manager, set->set_bdd);
     set->set_bdd = new_set_bdd;
 
     /*
@@ -62,8 +60,8 @@ IPSET_NAME(add_network)(ip_set_t *set, void *elem, int netmask)
 }
 
 
-bool
-IPSET_NAME(add)(ip_set_t *set, void *elem)
+gboolean
+IPSET_NAME(add)(ip_set_t *set, gpointer elem)
 {
     return IPSET_NAME(add_network)(set, elem, IP_BIT_SIZE);
 }

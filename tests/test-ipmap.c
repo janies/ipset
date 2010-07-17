@@ -8,14 +8,11 @@
  * ----------------------------------------------------------------------
  */
 
-#include <errno.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include <check.h>
+#include <glib.h>
+#include <gio/gio.h>
 
 #include <ipset/ipset.h>
 
@@ -24,8 +21,8 @@
  * Sample IP addresses
  */
 
-typedef uint8_t  ipv4_addr_t[4];
-typedef uint8_t  ipv6_addr_t[16];
+typedef guint8  ipv4_addr_t[4];
+typedef guint8  ipv6_addr_t[16];
 
 static ipv4_addr_t  IPV4_ADDR_1 = "\xc0\xa8\x01\x64"; /* 192.168.1.100 */
 static ipv4_addr_t  IPV4_ADDR_2 = "\xc0\xa8\x01\x65"; /* 192.168.1.101 */
@@ -37,74 +34,6 @@ static ipv6_addr_t  IPV6_ADDR_2 =
 "\xfe\x80\x00\x00\x00\x00\x00\x00\x02\x1e\xc2\xff\xfe\x9f\xe8\xe2";
 static ipv6_addr_t  IPV6_ADDR_3 =
 "\xfe\x80\x00\x01\x00\x00\x00\x00\x02\x1e\xc2\xff\xfe\x9f\xe8\xe1";
-
-
-/*-----------------------------------------------------------------------
- * Helper functions
- */
-
-const char  *template = "/tmp/test-ipmap-XXXXXX";
-const char  *base_filename = "/test.map";
-
-char  *tempdir;
-char  *full_filename;
-
-
-static void
-create_tempdir()
-{
-    size_t  dir_len;
-    size_t  file_len;
-    size_t  len;
-
-    tempdir = strdup(template);
-    tempdir = mkdtemp(tempdir);
-
-    dir_len = strlen(tempdir);
-    file_len = strlen(base_filename);
-    len = dir_len + file_len + 1;
-
-    full_filename = (char *) malloc(len);
-    strncpy(full_filename, tempdir, dir_len);
-    strncpy(full_filename + dir_len, base_filename, file_len + 1);
-}
-
-
-static void
-remove_tempdir()
-{
-    if (rmdir(tempdir) != 0)
-    {
-        if (errno == ENOTEMPTY)
-        {
-            fprintf(stderr,
-                    "Some test case didn't clean "
-                    "up after itself.\n");
-        }
-    }
-
-    free(tempdir);
-    free(full_filename);
-}
-
-
-static void
-remove_file()
-{
-    /*
-     * All of the tests that create an output file call it the same
-     * thing.  This function is registered as a cleanup function for
-     * each test case, and deletes this if it exists.
-     */
-
-    struct stat  sb;
-
-    if (stat(full_filename, &sb) == 0)
-    {
-        //printf("Removing %s...\n", full_filename);
-        unlink(full_filename);
-    }
-}
 
 
 /*-----------------------------------------------------------------------
@@ -164,26 +93,34 @@ END_TEST
 
 START_TEST(test_store_empty_01)
 {
-    FILE  *file;
     ip_map_t  map;
     ip_map_t  *read_map;
 
     ipmap_init(&map, 0);
 
-    file = fopen(full_filename, "w");
-    fail_unless(ipmap_save(&map, file),
-                "Could not save map to disk");
-    fclose(file);
+    GOutputStream  *ostream =
+        g_memory_output_stream_new(NULL, 0, g_realloc, g_free);
+    GMemoryOutputStream  *mostream =
+        G_MEMORY_OUTPUT_STREAM(ostream);
 
-    file = fopen(full_filename, "r");
-    read_map = ipmap_load(file);
+    fail_unless(ipmap_save(ostream, &map, NULL),
+                "Could not save map");
+
+    GInputStream  *istream =
+        g_memory_input_stream_new_from_data
+        (g_memory_output_stream_get_data(mostream),
+         g_memory_output_stream_get_data_size(mostream),
+         NULL);
+
+    read_map = ipmap_load(istream, NULL);
     fail_if(read_map == NULL,
-            "Could not read map from disk");
-    fclose(file);
+            "Could not read map");
 
     fail_unless(ipmap_is_equal(&map, read_map),
                 "Map not same after saving/loading");
 
+    g_object_unref(ostream);
+    g_object_unref(istream);
     ipmap_done(&map);
     ipmap_free(read_map);
 }
@@ -191,26 +128,34 @@ END_TEST
 
 START_TEST(test_store_empty_02)
 {
-    FILE  *file;
     ip_map_t  map;
     ip_map_t  *read_map;
 
     ipmap_init(&map, 1);
 
-    file = fopen(full_filename, "w");
-    fail_unless(ipmap_save(&map, file),
-                "Could not save map to disk");
-    fclose(file);
+    GOutputStream  *ostream =
+        g_memory_output_stream_new(NULL, 0, g_realloc, g_free);
+    GMemoryOutputStream  *mostream =
+        G_MEMORY_OUTPUT_STREAM(ostream);
 
-    file = fopen(full_filename, "r");
-    read_map = ipmap_load(file);
+    fail_unless(ipmap_save(ostream, &map, NULL),
+                "Could not save map");
+
+    GInputStream  *istream =
+        g_memory_input_stream_new_from_data
+        (g_memory_output_stream_get_data(mostream),
+         g_memory_output_stream_get_data_size(mostream),
+         NULL);
+
+    read_map = ipmap_load(istream, NULL);
     fail_if(read_map == NULL,
-            "Could not read map from disk");
-    fclose(file);
+            "Could not read map");
 
     fail_unless(ipmap_is_equal(&map, read_map),
                 "Map not same after saving/loading");
 
+    g_object_unref(ostream);
+    g_object_unref(istream);
     ipmap_done(&map);
     ipmap_free(read_map);
 }
@@ -397,10 +342,12 @@ START_TEST(test_ipv4_memory_size_1)
     ipmap_init(&map, 0);
     ipmap_ipv4_set(&map, &IPV4_ADDR_1, 1);
 
-#if SIZE_MAX == UINT32_MAX
-    expected = 544;
+#if GLIB_SIZEOF_VOID_P == 4
+    expected = 396;
+#elif GLIB_SIZEOF_VOID_P == 8
+    expected = 792;
 #else
-    expected = 1088;
+#   error "Unknown architecture: not 32-bit or 64-bit"
 #endif
     actual = ipmap_memory_size(&map);
 
@@ -420,10 +367,12 @@ START_TEST(test_ipv4_memory_size_2)
     ipmap_init(&map, 0);
     ipmap_ipv4_set_network(&map, &IPV4_ADDR_1, 24, 1);
 
-#if SIZE_MAX == UINT32_MAX
-    expected = 416;
+#if GLIB_SIZEOF_VOID_P == 4
+    expected = 300;
+#elif GLIB_SIZEOF_VOID_P == 8
+    expected = 600;
 #else
-    expected = 832;
+#   error "Unknown architecture: not 32-bit or 64-bit"
 #endif
     actual = ipmap_memory_size(&map);
 
@@ -437,7 +386,6 @@ END_TEST
 
 START_TEST(test_ipv4_store_01)
 {
-    FILE  *file;
     ip_map_t  map;
     ip_map_t  *read_map;
 
@@ -446,20 +394,29 @@ START_TEST(test_ipv4_store_01)
     ipmap_ipv4_set(&map, &IPV4_ADDR_2, 2);
     ipmap_ipv4_set_network(&map, &IPV4_ADDR_3, 24, 2);
 
-    file = fopen(full_filename, "w");
-    fail_unless(ipmap_save(&map, file),
-                "Could not save map to disk");
-    fclose(file);
+    GOutputStream  *ostream =
+        g_memory_output_stream_new(NULL, 0, g_realloc, g_free);
+    GMemoryOutputStream  *mostream =
+        G_MEMORY_OUTPUT_STREAM(ostream);
 
-    file = fopen(full_filename, "r");
-    read_map = ipmap_load(file);
+    fail_unless(ipmap_save(ostream, &map, NULL),
+                "Could not save map");
+
+    GInputStream  *istream =
+        g_memory_input_stream_new_from_data
+        (g_memory_output_stream_get_data(mostream),
+         g_memory_output_stream_get_data_size(mostream),
+         NULL);
+
+    read_map = ipmap_load(istream, NULL);
     fail_if(read_map == NULL,
-            "Could not read map from disk");
-    fclose(file);
+            "Could not read map");
 
     fail_unless(ipmap_is_equal(&map, read_map),
                 "Map not same after saving/loading");
 
+    g_object_unref(ostream);
+    g_object_unref(istream);
     ipmap_done(&map);
     ipmap_free(read_map);
 }
@@ -646,10 +603,12 @@ START_TEST(test_ipv6_memory_size_1)
     ipmap_init(&map, 0);
     ipmap_ipv6_set(&map, &IPV6_ADDR_1, 1);
 
-#if SIZE_MAX == UINT32_MAX
-    expected = 2080;
+#if GLIB_SIZEOF_VOID_P == 4
+    expected = 1548;
+#elif GLIB_SIZEOF_VOID_P == 8
+    expected = 3096;
 #else
-    expected = 4160;
+#   error "Unknown architecture: not 32-bit or 64-bit"
 #endif
     actual = ipmap_memory_size(&map);
 
@@ -669,10 +628,12 @@ START_TEST(test_ipv6_memory_size_2)
     ipmap_init(&map, 0);
     ipmap_ipv6_set_network(&map, &IPV6_ADDR_1, 32, 1);
 
-#if SIZE_MAX == UINT32_MAX
-    expected = 544;
+#if GLIB_SIZEOF_VOID_P == 4
+    expected = 396;
+#elif GLIB_SIZEOF_VOID_P == 8
+    expected = 792;
 #else
-    expected = 1088;
+#   error "Unknown architecture: not 32-bit or 64-bit"
 #endif
     actual = ipmap_memory_size(&map);
 
@@ -686,7 +647,6 @@ END_TEST
 
 START_TEST(test_ipv6_store_01)
 {
-    FILE  *file;
     ip_map_t  map;
     ip_map_t  *read_map;
 
@@ -695,20 +655,29 @@ START_TEST(test_ipv6_store_01)
     ipmap_ipv6_set(&map, &IPV6_ADDR_2, 2);
     ipmap_ipv6_set_network(&map, &IPV6_ADDR_3, 32, 2);
 
-    file = fopen(full_filename, "w");
-    fail_unless(ipmap_save(&map, file),
-                "Could not save map to disk");
-    fclose(file);
+    GOutputStream  *ostream =
+        g_memory_output_stream_new(NULL, 0, g_realloc, g_free);
+    GMemoryOutputStream  *mostream =
+        G_MEMORY_OUTPUT_STREAM(ostream);
 
-    file = fopen(full_filename, "r");
-    read_map = ipmap_load(file);
+    fail_unless(ipmap_save(ostream, &map, NULL),
+                "Could not save map");
+
+    GInputStream  *istream =
+        g_memory_input_stream_new_from_data
+        (g_memory_output_stream_get_data(mostream),
+         g_memory_output_stream_get_data_size(mostream),
+         NULL);
+
+    read_map = ipmap_load(istream, NULL);
     fail_if(read_map == NULL,
-            "Could not read map from disk");
-    fclose(file);
+            "Could not read map");
 
     fail_unless(ipmap_is_equal(&map, read_map),
                 "Map not same after saving/loading");
 
+    g_object_unref(ostream);
+    g_object_unref(istream);
     ipmap_done(&map);
     ipmap_free(read_map);
 }
@@ -725,7 +694,6 @@ ipmap_suite()
     Suite  *s = suite_create("ipmap");
 
     TCase  *tc_general = tcase_create("general");
-    tcase_add_checked_fixture(tc_general, NULL, remove_file);
     tcase_add_test(tc_general, test_map_starts_empty);
     tcase_add_test(tc_general, test_empty_maps_equal);
     tcase_add_test(tc_general, test_empty_maps_not_unequal);
@@ -735,7 +703,6 @@ ipmap_suite()
     suite_add_tcase(s, tc_general);
 
     TCase  *tc_ipv4 = tcase_create("ipv4");
-    tcase_add_checked_fixture(tc_ipv4, NULL, remove_file);
     tcase_add_test(tc_ipv4, test_ipv4_insert_01);
     tcase_add_test(tc_ipv4, test_ipv4_insert_02);
     tcase_add_test(tc_ipv4, test_ipv4_insert_03);
@@ -753,7 +720,6 @@ ipmap_suite()
     suite_add_tcase(s, tc_ipv4);
 
     TCase  *tc_ipv6 = tcase_create("ipv6");
-    tcase_add_checked_fixture(tc_ipv6, NULL, remove_file);
     tcase_add_test(tc_ipv6, test_ipv6_insert_01);
     tcase_add_test(tc_ipv6, test_ipv6_insert_02);
     tcase_add_test(tc_ipv6, test_ipv6_insert_03);
@@ -781,14 +747,12 @@ main(int argc, const char **argv)
     Suite  *suite = ipmap_suite();
     SRunner  *runner = srunner_create(suite);
 
+    g_type_init();
     ipset_init_library();
-    create_tempdir();
 
     srunner_run_all(runner, CK_NORMAL);
     number_failed = srunner_ntests_failed(runner);
     srunner_free(runner);
-
-    remove_tempdir();
 
     return (number_failed == 0)? EXIT_SUCCESS: EXIT_FAILURE;
 }

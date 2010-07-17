@@ -8,10 +8,9 @@
  * ----------------------------------------------------------------------
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <glib.h>
 
-#include <cudd.h>
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
@@ -24,8 +23,7 @@ ipset_init(ip_set_t *set)
      * false.
      */
 
-    set->set_bdd = Cudd_ReadLogicZero(ipset_manager);
-    Cudd_Ref(set->set_bdd);
+    set->set_bdd = ipset_node_cache_terminal(ipset_cache, FALSE);
 }
 
 
@@ -38,7 +36,7 @@ ipset_new()
      * Try to allocate a new set.
      */
 
-    result = (ip_set_t *) malloc(sizeof(ip_set_t));
+    result = g_slice_new(ip_set_t);
     if (result == NULL)
         return NULL;
 
@@ -54,7 +52,7 @@ ipset_new()
 void
 ipset_done(ip_set_t *set)
 {
-    Cudd_RecursiveDeref(ipset_manager, set->set_bdd);
+    /* nothing to do */
 }
 
 
@@ -62,5 +60,5 @@ void
 ipset_free(ip_set_t *set)
 {
     ipset_done(set);
-    free(set);
+    g_slice_free(ip_set_t, set);
 }

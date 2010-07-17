@@ -283,7 +283,7 @@ ipset_node_cache_nonterminal(ipset_node_cache_t *cache,
 ipset_node_id_t
 ipset_node_cache_load(GInputStream *stream,
                       ipset_node_cache_t *cache,
-                      GError **error);
+                      GError **err);
 
 
 /**
@@ -295,7 +295,7 @@ gboolean
 ipset_node_cache_save(GOutputStream *stream,
                       ipset_node_cache_t *cache,
                       ipset_node_id_t node,
-                      GError **error);
+                      GError **err);
 
 
 /*-----------------------------------------------------------------------

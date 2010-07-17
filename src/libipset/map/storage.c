@@ -8,77 +8,58 @@
  * ----------------------------------------------------------------------
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <glib.h>
 
-#include <cudd.h>
-#include <dddmp.h>
+#include <ipset/bdd/nodes.h>
 #include <ipset/ipset.h>
 #include <ipset/internal.h>
 
 
 /**
- * The number of ADDs we have to store/load when reading and writing
+ * The number of BDDs we have to store/load when reading and writing
  * an IP map.
  */
 
-#define NUM_ADDS 2
+#define NUM_BDDS 2
 
 
-bool
-ipmap_save(ip_map_t *map, FILE *file)
+gboolean
+ipmap_save(GOutputStream *stream,
+           ip_map_t *map,
+           GError **err)
 {
-    DdNode  *nodes[NUM_ADDS];
-
-    nodes[0] = map->map_add;
-    nodes[1] = map->default_add;
-
-    return
-        Dddmp_cuddAddArrayStore(ipset_manager, NULL,
-                                NUM_ADDS, nodes,
-                                NULL, NULL, NULL,
-                                DDDMP_MODE_TEXT,
-                                DDDMP_VARIDS,
-                                NULL, file);
+    return ipset_node_cache_save
+        (stream, ipset_cache, map->map_bdd, err);
 }
 
 
 ip_map_t *
-ipmap_load(FILE *file)
+ipmap_load(GInputStream *stream,
+           GError **err)
 {
     ip_map_t  *map;
-    DdNode  **nodes;
-    int  num_roots;
+    ipset_node_id_t  node;
 
     /*
      * It doesn't matter what default value we use here, because we're
-     * going to replace it with the default ADD we load in from the
+     * going to replace it with the default BDD we load in from the
      * file.
      */
 
     map = ipmap_new(0);
     if (map == NULL) return NULL;
 
-    num_roots =
-        Dddmp_cuddAddArrayLoad(ipset_manager,
-                               DDDMP_ROOT_MATCHLIST,
-                               NULL,
-                               DDDMP_VAR_MATCHIDS,
-                               NULL, NULL, NULL,
-                               DDDMP_MODE_TEXT,
-                               NULL, file,
-                               &nodes);
+    GError  *suberror = NULL;
 
-    if (num_roots != 2)
+    node = ipset_node_cache_load
+        (stream, ipset_cache, &suberror);
+    if (suberror != NULL)
     {
-        if (nodes != NULL)
-            free(nodes);
-
+        g_propagate_error(err, suberror);
         ipmap_free(map);
         return NULL;
     }
 
-    map->map_add = nodes[0];
-    map->default_add = nodes[1];
+    map->map_bdd = node;
     return map;
 }

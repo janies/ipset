@@ -32,13 +32,6 @@ def configure(conf):
         mandatory=True
     )
 
-    conf.check_cfg(
-        package="cudd",
-        uselib_store="CUDD",
-        args="--cflags --libs",
-        mandatory=True
-    )
-
     conf.env.append_value("RELEASE_DEFINES", "NDEBUG")
 
 
@@ -48,8 +41,8 @@ def build(bld):
         source = bld.path.ant_glob("libipset/**/*.c"),
         defines = ['G_LOG_DOMAIN=\"ipset\"'],
         includes = ["../include"],
-        target = "libipset",
-        uselib = "GLIB GIO CUDD",
+        target = "ipset",
+        uselib = "GLIB GIO",
         vnum = "0.0.0",
         export_incdirs = ["../include"],
     )
