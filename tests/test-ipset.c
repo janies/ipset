@@ -117,7 +117,7 @@ END_TEST
  * IPv4 tests
  */
 
-START_TEST(test_ipv4_insert)
+START_TEST(test_ipv4_insert_01)
 {
     ip_set_t  set;
 
@@ -133,13 +133,51 @@ START_TEST(test_ipv4_insert)
 }
 END_TEST
 
-START_TEST(test_ipv4_insert_network)
+START_TEST(test_ipv4_insert_02)
+{
+    ip_set_t  set;
+
+    ipset_init(&set);
+
+    ipset_ip_t  ip;
+    ipset_ip_from_string(&ip, "192.168.1.100");
+
+    fail_if(ipset_ip_add(&set, &ip),
+            "Element should not be present");
+
+    fail_unless(ipset_ipv4_add(&set, &IPV4_ADDR_1),
+                "Element should be present");
+
+    ipset_done(&set);
+}
+END_TEST
+
+START_TEST(test_ipv4_insert_network_01)
 {
     ip_set_t  set;
 
     ipset_init(&set);
 
     fail_if(ipset_ipv4_add_network(&set, &IPV4_ADDR_1, 24),
+            "Element should not be present");
+
+    fail_unless(ipset_ipv4_add_network(&set, &IPV4_ADDR_1, 24),
+                "Element should be present");
+
+    ipset_done(&set);
+}
+END_TEST
+
+START_TEST(test_ipv4_insert_network_02)
+{
+    ip_set_t  set;
+
+    ipset_init(&set);
+
+    ipset_ip_t  ip;
+    ipset_ip_from_string(&ip, "192.168.1.100");
+
+    fail_if(ipset_ip_add_network(&set, &ip, 24),
             "Element should not be present");
 
     fail_unless(ipset_ipv4_add_network(&set, &IPV4_ADDR_1, 24),
@@ -374,7 +412,7 @@ END_TEST
  * IPv6 tests
  */
 
-START_TEST(test_ipv6_insert)
+START_TEST(test_ipv6_insert_01)
 {
     ip_set_t  set;
 
@@ -390,13 +428,51 @@ START_TEST(test_ipv6_insert)
 }
 END_TEST
 
-START_TEST(test_ipv6_insert_network)
+START_TEST(test_ipv6_insert_02)
+{
+    ip_set_t  set;
+
+    ipset_init(&set);
+
+    ipset_ip_t  ip;
+    ipset_ip_from_string(&ip, "fe80::21e:c2ff:fe9f:e8e1");
+
+    fail_if(ipset_ip_add(&set, &ip),
+            "Element should not be present");
+
+    fail_unless(ipset_ipv6_add(&set, &IPV6_ADDR_1),
+                "Element should be present");
+
+    ipset_done(&set);
+}
+END_TEST
+
+START_TEST(test_ipv6_insert_network_01)
 {
     ip_set_t  set;
 
     ipset_init(&set);
 
     fail_if(ipset_ipv6_add_network(&set, &IPV6_ADDR_1, 32),
+            "Element should not be present");
+
+    fail_unless(ipset_ipv6_add_network(&set, &IPV6_ADDR_1, 32),
+                "Element should be present");
+
+    ipset_done(&set);
+}
+END_TEST
+
+START_TEST(test_ipv6_insert_network_02)
+{
+    ip_set_t  set;
+
+    ipset_init(&set);
+
+    ipset_ip_t  ip;
+    ipset_ip_from_string(&ip, "fe80::21e:c2ff:fe9f:e8e1");
+
+    fail_if(ipset_ip_add_network(&set, &ip, 32),
             "Element should not be present");
 
     fail_unless(ipset_ipv6_add_network(&set, &IPV6_ADDR_1, 32),
@@ -644,8 +720,10 @@ ipset_suite()
     suite_add_tcase(s, tc_general);
 
     TCase  *tc_ipv4 = tcase_create("ipv4");
-    tcase_add_test(tc_ipv4, test_ipv4_insert);
-    tcase_add_test(tc_ipv4, test_ipv4_insert_network);
+    tcase_add_test(tc_ipv4, test_ipv4_insert_01);
+    tcase_add_test(tc_ipv4, test_ipv4_insert_02);
+    tcase_add_test(tc_ipv4, test_ipv4_insert_network_01);
+    tcase_add_test(tc_ipv4, test_ipv4_insert_network_02);
     tcase_add_test(tc_ipv4, test_ipv4_bad_netmask_01);
     tcase_add_test(tc_ipv4, test_ipv4_bad_netmask_02);
     tcase_add_test(tc_ipv4, test_ipv4_equality_1);
@@ -658,8 +736,10 @@ ipset_suite()
     suite_add_tcase(s, tc_ipv4);
 
     TCase  *tc_ipv6 = tcase_create("ipv6");
-    tcase_add_test(tc_ipv6, test_ipv6_insert);
-    tcase_add_test(tc_ipv6, test_ipv6_insert_network);
+    tcase_add_test(tc_ipv6, test_ipv6_insert_01);
+    tcase_add_test(tc_ipv6, test_ipv6_insert_02);
+    tcase_add_test(tc_ipv6, test_ipv6_insert_network_01);
+    tcase_add_test(tc_ipv6, test_ipv6_insert_network_02);
     tcase_add_test(tc_ipv6, test_ipv6_bad_netmask_01);
     tcase_add_test(tc_ipv6, test_ipv6_bad_netmask_02);
     tcase_add_test(tc_ipv6, test_ipv6_equality_1);

@@ -52,3 +52,28 @@ ipset_memory_size(ip_set_t *set)
 {
     return ipset_node_memory_size(set->set_bdd);
 }
+
+
+gboolean
+ipset_ip_add(ip_set_t *set, ipset_ip_t *addr)
+{
+    if (addr->is_ipv4)
+    {
+        return ipset_ipv4_add(set, addr->addr);
+    } else {
+        return ipset_ipv6_add(set, addr->addr);
+    }
+}
+
+
+gboolean
+ipset_ip_add_network(ip_set_t *set, ipset_ip_t *addr, guint netmask)
+{
+    if (addr->is_ipv4)
+    {
+        return ipset_ipv4_add_network(set, addr->addr, netmask);
+    } else {
+        return ipset_ipv6_add_network(set, addr->addr, netmask);
+    }
+}
+

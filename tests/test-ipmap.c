@@ -211,6 +211,24 @@ START_TEST(test_ipv4_insert_03)
 }
 END_TEST
 
+START_TEST(test_ipv4_insert_04)
+{
+    ip_map_t  map;
+
+    ipmap_init(&map, 0);
+
+    ipset_ip_t  ip;
+    ipset_ip_from_string(&ip, "192.168.1.100");
+
+    ipmap_ip_set(&map, &ip, 1);
+
+    fail_unless(ipmap_ipv4_get(&map, &IPV4_ADDR_1) == 1,
+                "Element should be present");
+
+    ipmap_done(&map);
+}
+END_TEST
+
 START_TEST(test_ipv4_insert_network_01)
 {
     ip_map_t  map;
@@ -250,6 +268,24 @@ START_TEST(test_ipv4_insert_network_03)
     ipmap_ipv4_set_network(&map, &IPV4_ADDR_1, 24, 1);
 
     fail_unless(ipmap_ipv4_get(&map, &IPV4_ADDR_3) == 0,
+                "Element should be present");
+
+    ipmap_done(&map);
+}
+END_TEST
+
+START_TEST(test_ipv4_insert_network_04)
+{
+    ip_map_t  map;
+
+    ipmap_init(&map, 0);
+
+    ipset_ip_t  ip;
+    ipset_ip_from_string(&ip, "192.168.1.100");
+
+    ipmap_ip_set_network(&map, &ip, 24, 1);
+
+    fail_unless(ipmap_ipv4_get(&map, &IPV4_ADDR_1) == 1,
                 "Element should be present");
 
     ipmap_done(&map);
@@ -472,6 +508,24 @@ START_TEST(test_ipv6_insert_03)
 }
 END_TEST
 
+START_TEST(test_ipv6_insert_04)
+{
+    ip_map_t  map;
+
+    ipmap_init(&map, 0);
+
+    ipset_ip_t  ip;
+    ipset_ip_from_string(&ip, "fe80::21e:c2ff:fe9f:e8e1");
+
+    ipmap_ip_set(&map, &ip, 1);
+
+    fail_unless(ipmap_ipv6_get(&map, &IPV6_ADDR_1) == 1,
+                "Element should be present");
+
+    ipmap_done(&map);
+}
+END_TEST
+
 START_TEST(test_ipv6_insert_network_01)
 {
     ip_map_t  map;
@@ -511,6 +565,24 @@ START_TEST(test_ipv6_insert_network_03)
     ipmap_ipv6_set_network(&map, &IPV6_ADDR_1, 32, 1);
 
     fail_unless(ipmap_ipv6_get(&map, &IPV6_ADDR_3) == 0,
+                "Element should be present");
+
+    ipmap_done(&map);
+}
+END_TEST
+
+START_TEST(test_ipv6_insert_network_04)
+{
+    ip_map_t  map;
+
+    ipmap_init(&map, 0);
+
+    ipset_ip_t  ip;
+    ipset_ip_from_string(&ip, "fe80::21e:c2ff:fe9f:e8e1");
+
+    ipmap_ip_set_network(&map, &ip, 32, 1);
+
+    fail_unless(ipmap_ipv6_get(&map, &IPV6_ADDR_1) == 1,
                 "Element should be present");
 
     ipmap_done(&map);
@@ -706,9 +778,11 @@ ipmap_suite()
     tcase_add_test(tc_ipv4, test_ipv4_insert_01);
     tcase_add_test(tc_ipv4, test_ipv4_insert_02);
     tcase_add_test(tc_ipv4, test_ipv4_insert_03);
+    tcase_add_test(tc_ipv4, test_ipv4_insert_04);
     tcase_add_test(tc_ipv4, test_ipv4_insert_network_01);
     tcase_add_test(tc_ipv4, test_ipv4_insert_network_02);
     tcase_add_test(tc_ipv4, test_ipv4_insert_network_03);
+    tcase_add_test(tc_ipv4, test_ipv4_insert_network_04);
     tcase_add_test(tc_ipv4, test_ipv4_bad_netmask_01);
     tcase_add_test(tc_ipv4, test_ipv4_bad_netmask_02);
     tcase_add_test(tc_ipv4, test_ipv4_equality_1);
@@ -723,9 +797,11 @@ ipmap_suite()
     tcase_add_test(tc_ipv6, test_ipv6_insert_01);
     tcase_add_test(tc_ipv6, test_ipv6_insert_02);
     tcase_add_test(tc_ipv6, test_ipv6_insert_03);
+    tcase_add_test(tc_ipv6, test_ipv6_insert_04);
     tcase_add_test(tc_ipv6, test_ipv6_insert_network_01);
     tcase_add_test(tc_ipv6, test_ipv6_insert_network_02);
     tcase_add_test(tc_ipv6, test_ipv6_insert_network_03);
+    tcase_add_test(tc_ipv6, test_ipv6_insert_network_04);
     tcase_add_test(tc_ipv6, test_ipv6_bad_netmask_01);
     tcase_add_test(tc_ipv6, test_ipv6_bad_netmask_02);
     tcase_add_test(tc_ipv6, test_ipv6_equality_1);

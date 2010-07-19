@@ -52,3 +52,42 @@ ipmap_memory_size(ip_map_t *map)
 {
     return ipset_node_memory_size(map->map_bdd);
 }
+
+
+void
+ipmap_ip_set(ip_map_t *map, ipset_ip_t *addr, gint value)
+{
+    if (addr->is_ipv4)
+    {
+        ipmap_ipv4_set(map, addr->addr, value);
+    } else {
+        ipmap_ipv6_set(map, addr->addr, value);
+    }
+}
+
+
+void
+ipmap_ip_set_network(ip_map_t *map,
+                     ipset_ip_t *addr,
+                     guint netmask,
+                     gint value)
+{
+    if (addr->is_ipv4)
+    {
+        ipmap_ipv4_set_network(map, addr->addr, netmask, value);
+    } else {
+        ipmap_ipv6_set_network(map, addr->addr, netmask, value);
+    }
+}
+
+
+gint
+ipmap_ip_get(ip_map_t *map, ipset_ip_t *addr)
+{
+    if (addr->is_ipv4)
+    {
+        return ipmap_ipv4_get(map, addr->addr);
+    } else {
+        return ipmap_ipv6_get(map, addr->addr);
+    }
+}

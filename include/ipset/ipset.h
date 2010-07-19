@@ -16,6 +16,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#include <ipset/ip.h>
 #include <ipset/internal.h>
 
 
@@ -179,6 +180,26 @@ ipset_ipv6_add(ip_set_t *set, gpointer elem);
 gboolean
 ipset_ipv6_add_network(ip_set_t *set, gpointer elem, guint netmask);
 
+/**
+ * Adds a single generic IP address to an IP set.
+ *
+ * Returns whether the value was already in the set or not.
+ */
+
+gboolean
+ipset_ip_add(ip_set_t *set, ipset_ip_t *addr);
+
+/**
+ * Adds a network of generic IP addresses to an IP set.  All of the
+ * addresses that start with the first netmask bits of elem will be
+ * added to the set.
+ *
+ * Returns whether the network was already in the set or not.
+ */
+
+gboolean
+ipset_ip_add_network(ip_set_t *set, ipset_ip_t *addr, guint netmask);
+
 
 /*---------------------------------------------------------------------
  * IP map functions
@@ -340,6 +361,35 @@ ipmap_ipv6_set_network(ip_map_t *map,
 
 gint
 ipmap_ipv6_get(ip_map_t *map, gpointer elem);
+
+/**
+ * Adds a single generic IP address to an IP map, with the given
+ * value.
+ */
+
+void
+ipmap_ip_set(ip_map_t *map, ipset_ip_t *addr, gint value);
+
+/**
+ * Adds a network of generic IP addresses to an IP map, with each
+ * address in the network mapping to the given value.  All of the
+ * addresses that start with the first netmask bits of elem will be
+ * added to the map.
+ */
+
+void
+ipmap_ip_set_network(ip_map_t *map,
+                     ipset_ip_t *addr,
+                     guint netmask,
+                     gint value);
+
+/**
+ * Returns the value that a generic IP address is mapped to in the
+ * map.
+ */
+
+gint
+ipmap_ip_get(ip_map_t *map, ipset_ip_t *addr);
 
 
 #endif  /* IPSET_IPSET_H */
