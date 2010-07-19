@@ -32,6 +32,13 @@ def configure(conf):
         mandatory=True
     )
 
+    conf.check_cfg(
+        package="gio-unix-2.0",
+        uselib_store="GIO_UNIX",
+        args="--cflags --libs",
+        mandatory=True
+    )
+
     conf.env.append_value("RELEASE_DEFINES", "NDEBUG")
 
 
@@ -54,4 +61,13 @@ def build(bld):
         source = Utils.subst_vars("${APPNAME}.pc.in", bld.env),
         target = Utils.subst_vars("${APPNAME}.pc", bld.env),
         install_path = "${PREFIX}/lib/pkgconfig",
+    )
+
+    bld(
+        features="cc cprogram",
+        source = bld.path.ant_glob("ipsetbuild/**/*.c"),
+        includes = ["../include"],
+        target = "ipsetbuild/ipsetbuild",
+        uselib = "GLIB GIO GIO_UNIX",
+        uselib_local = "ipset",
     )
