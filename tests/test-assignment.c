@@ -1,0 +1,146 @@
+/* -*- coding: utf-8 -*-
+ * ----------------------------------------------------------------------
+ * Copyright © 2009-2010, RedJack, LLC.
+ * All rights reserved.
+ *
+ * Please see the LICENSE.txt file in this distribution for license
+ * details.
+ * ----------------------------------------------------------------------
+ */
+
+#include <stdlib.h>
+
+#include <check.h>
+#include <glib.h>
+
+#include <ipset/bdd/nodes.h>
+
+
+/*-----------------------------------------------------------------------
+ * Assignments
+ */
+
+START_TEST(test_bdd_assignment_empty_equal)
+{
+    ipset_assignment_t  *a1;
+    ipset_assignment_t  *a2;
+
+    a1 = ipset_assignment_new();
+    a2 = ipset_assignment_new();
+
+    fail_unless(ipset_assignment_equal(a1, a2),
+                "Assignments should be equal");
+
+    ipset_assignment_free(a1);
+    ipset_assignment_free(a2);
+}
+END_TEST
+
+
+START_TEST(test_bdd_assignment_equal_1)
+{
+    ipset_assignment_t  *a1;
+    ipset_assignment_t  *a2;
+
+    a1 = ipset_assignment_new();
+    ipset_assignment_set(a1, 0, IPSET_TRUE);
+    ipset_assignment_set(a1, 1, IPSET_FALSE);
+
+    a2 = ipset_assignment_new();
+    ipset_assignment_set(a2, 0, IPSET_TRUE);
+    ipset_assignment_set(a2, 1, IPSET_FALSE);
+
+    fail_unless(ipset_assignment_equal(a1, a2),
+                "Assignments should be equal");
+
+    ipset_assignment_free(a1);
+    ipset_assignment_free(a2);
+}
+END_TEST
+
+
+START_TEST(test_bdd_assignment_equal_2)
+{
+    ipset_assignment_t  *a1;
+    ipset_assignment_t  *a2;
+
+    a1 = ipset_assignment_new();
+    ipset_assignment_set(a1, 0, IPSET_TRUE);
+    ipset_assignment_set(a1, 1, IPSET_FALSE);
+
+    a2 = ipset_assignment_new();
+    ipset_assignment_set(a2, 0, IPSET_TRUE);
+    ipset_assignment_set(a2, 1, IPSET_FALSE);
+    ipset_assignment_set(a2, 4, IPSET_EITHER);
+
+    fail_unless(ipset_assignment_equal(a1, a2),
+                "Assignments should be equal");
+
+    ipset_assignment_free(a1);
+    ipset_assignment_free(a2);
+}
+END_TEST
+
+
+START_TEST(test_bdd_assignment_cut_1)
+{
+    ipset_assignment_t  *a1;
+    ipset_assignment_t  *a2;
+
+    a1 = ipset_assignment_new();
+    ipset_assignment_set(a1, 0, IPSET_TRUE);
+    ipset_assignment_set(a1, 1, IPSET_FALSE);
+
+    a2 = ipset_assignment_new();
+    ipset_assignment_set(a2, 0, IPSET_TRUE);
+    ipset_assignment_set(a2, 1, IPSET_FALSE);
+    ipset_assignment_set(a2, 2, IPSET_TRUE);
+    ipset_assignment_set(a2, 3, IPSET_TRUE);
+    ipset_assignment_set(a2, 4, IPSET_FALSE);
+
+    ipset_assignment_cut(a2, 2);
+
+    fail_unless(ipset_assignment_equal(a1, a2),
+                "Assignments should be equal");
+
+    ipset_assignment_free(a1);
+    ipset_assignment_free(a2);
+}
+END_TEST
+
+
+/*-----------------------------------------------------------------------
+ * Testing harness
+ */
+
+static Suite *
+test_suite()
+{
+    Suite  *s = suite_create("assignment");
+
+    TCase  *tc_assignments = tcase_create("assignments");
+    tcase_add_test(tc_assignments, test_bdd_assignment_empty_equal);
+    tcase_add_test(tc_assignments, test_bdd_assignment_equal_1);
+    tcase_add_test(tc_assignments, test_bdd_assignment_equal_2);
+    tcase_add_test(tc_assignments, test_bdd_assignment_cut_1);
+    suite_add_tcase(s, tc_assignments);
+
+    return s;
+}
+
+
+int
+main(int argc, const char **argv)
+{
+    int  number_failed;
+    Suite  *suite = test_suite();
+    SRunner  *runner = srunner_create(suite);
+
+    g_type_init();
+
+    srunner_run_all(runner, CK_NORMAL);
+    number_failed = srunner_ntests_failed(runner);
+    srunner_free(runner);
+
+    return (number_failed == 0)? EXIT_SUCCESS: EXIT_FAILURE;
+}

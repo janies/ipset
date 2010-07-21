@@ -445,4 +445,108 @@ ipset_node_evaluate(ipset_node_id_t node,
                     gconstpointer user_data);
 
 
+/*-----------------------------------------------------------------------
+ * Variable assignments
+ */
+
+/**
+ * Each variable in the input to a Boolean function can be true or
+ * false; it can also be EITHER, which means that the variable can be
+ * either true or false in a particular assignment without affecting
+ * the result of the function.
+ */
+
+typedef enum ipset_tribool
+{
+    IPSET_FALSE = 0,
+    IPSET_TRUE = 1,
+    IPSET_EITHER = 2
+} ipset_tribool_t;
+
+
+/**
+ * An assignment is a mapping of variable numbers to Boolean values.
+ * It represents an input to a Boolean function that maps to a
+ * particular output value.  Each variable in the input to a Boolean
+ * function can be true or false; it can also be EITHER, which means
+ * that the variable can be either true or false in a particular
+ * assignment without affecting the result of the function.
+ */
+
+typedef struct ipset_assignment
+{
+    /**
+     * The underlying variable assignments are stored in a vector of
+     * tribools.  Every variable that has a true or false value must
+     * appear in the vector.  Variables that are EITHER only have to
+     * appear to prevent gaps in the vector.  Any variables outside
+     * the range of the vector are assumed to be EITHER.
+     */
+
+    GArray  *values;
+} ipset_assignment_t;
+
+
+/**
+ * Create a new assignment where all variables are indeterminite.
+ */
+
+ipset_assignment_t *
+ipset_assignment_new();
+
+
+/**
+ * Free an assignment.
+ */
+
+void
+ipset_assignment_free(ipset_assignment_t *assignment);
+
+
+/**
+ * Compare two assignments for equality.
+ */
+
+gboolean
+ipset_assignment_equal(const ipset_assignment_t *assignment1,
+                       const ipset_assignment_t *assignment2);
+
+
+/**
+ * Set the given variable, and all higher variables, to the EITHER
+ * value.
+ */
+
+void
+ipset_assignment_cut(ipset_assignment_t *assignment,
+                     ipset_variable_t var);
+
+
+/**
+ * Clear the assignment, setting all variables to the EITHER value.
+ */
+
+void
+ipset_assignment_clear(ipset_assignment_t *assignment);
+
+
+/**
+ * Return the value assigned to a particular variable.
+ */
+
+ipset_tribool_t
+ipset_assignment_get(ipset_assignment_t *assignment,
+                     ipset_variable_t var);
+
+
+/**
+ * Set the value assigned to a particular variable.
+ */
+
+void
+ipset_assignment_set(ipset_assignment_t *assignment,
+                     ipset_variable_t var,
+                     ipset_tribool_t value);
+
+
 #endif  /* IPSET_BDD_NODES_H */
