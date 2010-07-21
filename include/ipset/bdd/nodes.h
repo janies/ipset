@@ -549,4 +549,81 @@ ipset_assignment_set(ipset_assignment_t *assignment,
                      ipset_tribool_t value);
 
 
+/*-----------------------------------------------------------------------
+ * BDD iterators
+ */
+
+/**
+ * An iterator for walking through the assignments for a given BDD
+ * node.
+ *
+ * The iterator walks through each path in the BDD tree, stopping at
+ * each terminal node.  Each time we reach a terminal node, we yield a
+ * new ipset_assignment_t object representing the assignment of
+ * variables along the current path.
+ *
+ * We maintain a stack of nodes leading to the current terminal, which
+ * allows us to backtrack up the path to find the next terminal when
+ * we increment the iterator.
+ */
+
+typedef struct ipset_bdd_iterator
+{
+    /**
+     * Whether there are any more assignments in this iterator.
+     */
+
+    gboolean finished;
+
+    /**
+     * The sequence of nonterminal nodes leading to the current
+     * terminal.
+     */
+
+    GArray  *stack;
+
+    /**
+     * The current assignment.
+     */
+
+    ipset_assignment_t  *assignment;
+
+    /**
+     * The value of the BDD's function when applied to the current
+     * assignment.
+     */
+
+    ipset_range_t  value;
+
+} ipset_bdd_iterator_t;
+
+
+/**
+ * Return an iterator that yields all of the assignments in the given
+ * BDD.  The iterator contains two items of interest.  The first is an
+ * ipset_assignment_t providing the value that each variable takes,
+ * while the second is the terminal value that is the result of the
+ * BDD's function when applied to that variable assignment.
+ */
+
+ipset_bdd_iterator_t *
+ipset_node_iterate(ipset_node_id_t root);
+
+
+/**
+ * Free a BDD iterator.
+ */
+
+void
+ipset_bdd_iterator_free(ipset_bdd_iterator_t *iterator);
+
+
+/**
+ * Advance the iterator to the next assignment.
+ */
+
+void
+ipset_bdd_iterator_advance(ipset_bdd_iterator_t *iterator);
+
+
 #endif  /* IPSET_BDD_NODES_H */

@@ -988,6 +988,136 @@ END_TEST
 
 
 /*-----------------------------------------------------------------------
+ * Iteration
+ */
+
+START_TEST(test_bdd_iterate_1)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = ¬x[0]
+     */
+
+    ipset_node_id_t  n_false =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  node =
+        ipset_node_cache_nonterminal(cache, 0, n_true, n_false);
+
+    /*
+     * And test that iterating the BDD gives us the expected results.
+     */
+
+    ipset_assignment_t  *expected;
+    expected = ipset_assignment_new();
+
+    ipset_bdd_iterator_t  *it = ipset_node_iterate(node);
+
+    fail_if(it->finished,
+            "Iterator should not be empty");
+    ipset_assignment_clear(expected);
+    ipset_assignment_set(expected, 0, IPSET_FALSE);
+    fail_unless(ipset_assignment_equal(expected, it->assignment),
+                "Iterator assignment 0 doesn't match");
+    fail_unless(TRUE == it->value,
+                "Iterator value 0 doesn't match");
+
+    ipset_bdd_iterator_advance(it);
+    fail_if(it->finished,
+            "Iterator should have more than 1 element");
+    ipset_assignment_clear(expected);
+    ipset_assignment_set(expected, 0, IPSET_TRUE);
+    fail_unless(ipset_assignment_equal(expected, it->assignment),
+                "Iterator assignment 1 doesn't match");
+    fail_unless(FALSE == it->value,
+                "Iterator value 1 doesn't match (%u)", it->value);
+
+    ipset_bdd_iterator_advance(it);
+    fail_unless(it->finished,
+                "Iterator should have 2 elements");
+
+    ipset_assignment_free(expected);
+    ipset_bdd_iterator_free(it);
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+START_TEST(test_bdd_iterate_2)
+{
+    ipset_node_cache_t  *cache = ipset_node_cache_new();
+
+    /*
+     * Create a BDD representing
+     *   f(x) = ¬x[0] ∧ x[1]
+     */
+
+    ipset_node_id_t  n_false =
+        ipset_node_cache_terminal(cache, FALSE);
+    ipset_node_id_t  n_true =
+        ipset_node_cache_terminal(cache, TRUE);
+
+    ipset_node_id_t  node1 =
+        ipset_node_cache_nonterminal(cache, 1, n_false, n_true);
+    ipset_node_id_t  node =
+        ipset_node_cache_nonterminal(cache, 0, node1, n_false);
+
+    /*
+     * And test that iterating the BDD gives us the expected results.
+     */
+
+    ipset_assignment_t  *expected;
+    expected = ipset_assignment_new();
+
+    ipset_bdd_iterator_t  *it = ipset_node_iterate(node);
+
+    fail_if(it->finished,
+            "Iterator should not be empty");
+    ipset_assignment_clear(expected);
+    ipset_assignment_set(expected, 0, IPSET_FALSE);
+    ipset_assignment_set(expected, 1, IPSET_FALSE);
+    fail_unless(ipset_assignment_equal(expected, it->assignment),
+                "Iterator assignment 0 doesn't match");
+    fail_unless(FALSE == it->value,
+                "Iterator value 0 doesn't match");
+
+    ipset_bdd_iterator_advance(it);
+    fail_if(it->finished,
+            "Iterator should have more than 1 element");
+    ipset_assignment_clear(expected);
+    ipset_assignment_set(expected, 0, IPSET_FALSE);
+    ipset_assignment_set(expected, 1, IPSET_TRUE);
+    fail_unless(ipset_assignment_equal(expected, it->assignment),
+                "Iterator assignment 1 doesn't match");
+    fail_unless(TRUE == it->value,
+                "Iterator value 1 doesn't match (%u)", it->value);
+
+    ipset_bdd_iterator_advance(it);
+    fail_if(it->finished,
+            "Iterator should have more than 2 elements");
+    ipset_assignment_clear(expected);
+    ipset_assignment_set(expected, 0, IPSET_TRUE);
+    fail_unless(ipset_assignment_equal(expected, it->assignment),
+                "Iterator assignment 2 doesn't match");
+    fail_unless(FALSE == it->value,
+                "Iterator value 2 doesn't match (%u)", it->value);
+
+    ipset_bdd_iterator_advance(it);
+    fail_unless(it->finished,
+                "Iterator should have 3 elements");
+
+    ipset_assignment_free(expected);
+    ipset_bdd_iterator_free(it);
+    ipset_node_cache_free(cache);
+}
+END_TEST
+
+
+/*-----------------------------------------------------------------------
  * Testing harness
  */
 
@@ -1033,6 +1163,11 @@ test_suite()
     tcase_add_test(tc_serialization, test_bdd_load_1);
     tcase_add_test(tc_serialization, test_bdd_load_2);
     suite_add_tcase(s, tc_serialization);
+
+    TCase  *tc_iteration = tcase_create("iteration");
+    tcase_add_test(tc_iteration, test_bdd_iterate_1);
+    tcase_add_test(tc_iteration, test_bdd_iterate_2);
+    suite_add_tcase(s, tc_iteration);
 
     return s;
 }
