@@ -237,12 +237,7 @@ gboolean
 ipset_bit_array_assignment(gconstpointer user_data,
                            ipset_variable_t variable)
 {
-    const guint8  *bit_array = (const guint8 *) user_data;
-    unsigned int  byte_index = variable / 8;
-    unsigned int  bit_number = variable % 8;
-    unsigned int  bit_mask = 0x80 >> bit_number;
-
-    return ((bit_array[byte_index] & bit_mask) != 0);
+    return IPSET_BIT_GET(user_data, variable);
 }
 
 

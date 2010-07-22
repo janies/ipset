@@ -31,10 +31,8 @@ IPSET_NAME(var_for_bit)(guint bit)
 
 
 ipset_node_id_t
-IPSET_NAME(make_ip_bdd)(gpointer vaddr, guint netmask)
+IPSET_NAME(make_ip_bdd)(gpointer addr, guint netmask)
 {
-    guint8  *addr = (guint8 *) vaddr;
-
     /*
      * Special case — the BDD for a netmask that's out of range never
      * evaluates to true.
@@ -63,23 +61,10 @@ IPSET_NAME(make_ip_bdd)(gpointer vaddr, guint netmask)
     gint  i;
     for (i = netmask-1; i >= 0; i--)
     {
-        gint  byte_index = i / 8;
-        gint  bit_number = i % 8;
-        gint  bit_mask = 0x80 >> bit_number;
-
         ipset_variable_t  var = IPSET_NAME(var_for_bit)(i);
 
-        if ((addr[byte_index] & bit_mask) == 0)
+        if (IPSET_BIT_GET(addr, i))
         {
-            /*
-             * The bit is not set
-             */
-
-            g_d_debug("Bit %d (variable %u) is NOT set", i, var);
-
-            result = ipset_node_cache_nonterminal
-                (ipset_cache, var, result, false_node);
-        } else {
             /*
              * The bit is set
              */
@@ -88,6 +73,15 @@ IPSET_NAME(make_ip_bdd)(gpointer vaddr, guint netmask)
 
             result = ipset_node_cache_nonterminal
                 (ipset_cache, var, false_node, result);
+        } else {
+            /*
+             * The bit is not set
+             */
+
+            g_d_debug("Bit %d (variable %u) is NOT set", i, var);
+
+            result = ipset_node_cache_nonterminal
+                (ipset_cache, var, result, false_node);
         }
     }
 

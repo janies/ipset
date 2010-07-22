@@ -34,20 +34,14 @@ IPMAP_NAME(bit_for_var)(ipset_variable_t var)
  */
 
 static gboolean
-IPMAP_NAME(assignment)(gconstpointer user_data, ipset_variable_t var)
+IPMAP_NAME(assignment)(gconstpointer addr, ipset_variable_t var)
 {
     if (var == 0)
     {
         return IP_DISCRIMINATOR_VALUE;
     } else {
-        guint8  *addr = (guint8 *) user_data;
-
         guint  bit = IPMAP_NAME(bit_for_var)(var);
-        guint  byte_index = bit / 8;
-        guint  bit_number = bit % 8;
-        guint  bit_mask = 0x80 >> bit_number;
-
-        return ((addr[byte_index] & bit_mask) != 0);
+        return IPSET_BIT_GET(addr, bit);
     }
 }
 

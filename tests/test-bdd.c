@@ -18,6 +18,84 @@
 
 
 /*-----------------------------------------------------------------------
+ * Bit arrays
+ */
+
+START_TEST(test_bit_get)
+{
+    guint16  a = GUINT16_TO_BE(0x6012); /* 0110 0000 0001 0010 */
+
+    fail_unless(IPSET_BIT_GET(&a,  0) == 0,
+                "Bit 0 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a,  1) == 1,
+                "Bit 1 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a,  2) == 1,
+                "Bit 2 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a,  3) == 0,
+                "Bit 3 is incorrect");
+
+    fail_unless(IPSET_BIT_GET(&a,  4) == 0,
+                "Bit 4 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a,  5) == 0,
+                "Bit 5 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a,  6) == 0,
+                "Bit 6 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a,  7) == 0,
+                "Bit 7 is incorrect");
+
+    fail_unless(IPSET_BIT_GET(&a,  8) == 0,
+                "Bit 8 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a,  9) == 0,
+                "Bit 9 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a, 10) == 0,
+                "Bit 10 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a, 11) == 1,
+                "Bit 11 is incorrect");
+
+    fail_unless(IPSET_BIT_GET(&a, 12) == 0,
+                "Bit 12 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a, 13) == 0,
+                "Bit 13 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a, 14) == 1,
+                "Bit 14 is incorrect");
+    fail_unless(IPSET_BIT_GET(&a, 15) == 0,
+                "Bit 15 is incorrect");
+}
+END_TEST
+
+
+START_TEST(test_bit_set)
+{
+    guint16  a = 0xffff;        /* 0110 0000 0001 0010 */
+
+    IPSET_BIT_SET(&a,  0, 0);
+    IPSET_BIT_SET(&a,  1, 1);
+    IPSET_BIT_SET(&a,  2, 1);
+    IPSET_BIT_SET(&a,  3, 0);
+
+    IPSET_BIT_SET(&a,  4, 0);
+    IPSET_BIT_SET(&a,  5, 0);
+    IPSET_BIT_SET(&a,  6, 0);
+    IPSET_BIT_SET(&a,  7, 0);
+
+    IPSET_BIT_SET(&a,  8, 0);
+    IPSET_BIT_SET(&a,  9, 0);
+    IPSET_BIT_SET(&a, 10, 0);
+    IPSET_BIT_SET(&a, 11, 1);
+
+    IPSET_BIT_SET(&a, 12, 0);
+    IPSET_BIT_SET(&a, 13, 0);
+    IPSET_BIT_SET(&a, 14, 1);
+    IPSET_BIT_SET(&a, 15, 0);
+
+    fail_unless(GUINT16_TO_BE(0x6012) == a,
+                "Incorrect bit result: 0x%04" G_GUINT16_FORMAT,
+                a);
+}
+END_TEST
+
+
+/*-----------------------------------------------------------------------
  * BDD terminals
  */
 
@@ -1125,6 +1203,11 @@ static Suite *
 test_suite()
 {
     Suite  *s = suite_create("bdd");
+
+    TCase  *tc_bits = tcase_create("bits");
+    tcase_add_test(tc_bits, test_bit_get);
+    tcase_add_test(tc_bits, test_bit_set);
+    suite_add_tcase(s, tc_bits);
 
     TCase  *tc_terminals = tcase_create("terminals");
     tcase_add_test(tc_terminals, test_bdd_false_terminal);
