@@ -597,6 +597,70 @@ ipset_assignment_set(ipset_assignment_t *assignment,
 
 
 /*-----------------------------------------------------------------------
+ * Expanded assignments
+ */
+
+/**
+ * An iterator for expanding a variable assignment.  For each EITHER
+ * variable in the assignment, the iterator yields a result with both
+ * values.
+ */
+
+typedef struct ipset_expanded_assignment
+{
+    /**
+     * Whether there are any more assignments in this iterator.
+     */
+
+    gboolean finished;
+
+    /**
+     * The variable values in the current expanded assignment.  Since
+     * there won't be any EITHERs in the expanded assignment, we can
+     * use a byte array, and represent each variable by a single bit.
+     */
+
+    GByteArray  *values;
+
+    /**
+     * An array containing all of the variables that are EITHER in the
+     * original assignment.
+     */
+
+    GArray  *eithers;
+
+} ipset_expanded_assignment_t;
+
+
+/**
+ * Return an iterator that expands a variable assignment.  For each
+ * variable that's EITHER in the assignment, the iterator yields a
+ * result with both values.  The iterator will ensure that all
+ * variables up through the specified one are given concrete values.
+ */
+
+ipset_expanded_assignment_t *
+ipset_assignment_expand(const ipset_assignment_t *assignment,
+                        ipset_variable_t last_var);
+
+
+/**
+ * Free an expanded assignment iterator.
+ */
+
+void
+ipset_expanded_assignment_free(ipset_expanded_assignment_t *exp);
+
+
+/**
+ * Advance the iterator to the next assignment.
+ */
+
+void
+ipset_expanded_assignment_advance(ipset_expanded_assignment_t *exp);
+
+
+/*-----------------------------------------------------------------------
  * BDD iterators
  */
 

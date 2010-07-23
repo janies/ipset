@@ -101,7 +101,7 @@ ipset_bdd_iterator_advance(ipset_bdd_iterator_t *iterator)
      * If we're already at the end of the iterator, don't do anything.
      */
 
-    if (iterator->finished)
+    if (G_UNLIKELY(iterator->finished))
         return;
 
     /*
