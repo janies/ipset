@@ -57,6 +57,14 @@ ipset_ip_from_ipv6(ipset_ip_t *addr, void *v_ipv6);
 
 
 /**
+ * Create an ipset_ip_t from another generic IP address.
+ */
+
+void
+ipset_ip_copy(ipset_ip_t *addr, const ipset_ip_t *src);
+
+
+/**
  * A hash function for ipset_ip_t objects.
  */
 

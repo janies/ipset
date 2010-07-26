@@ -39,6 +39,13 @@ ipset_ip_from_ipv6(ipset_ip_t *addr, void *v_ipv6)
 }
 
 
+void
+ipset_ip_copy(ipset_ip_t *addr, const ipset_ip_t *src)
+{
+    memcpy(addr, src, sizeof(ipset_ip_t));
+}
+
+
 guint
 ipset_ip_hash(ipset_ip_t *addr)
 {
