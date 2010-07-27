@@ -801,8 +801,7 @@ START_TEST(test_bdd_save_1)
     GMemoryOutputStream  *mstream =
         G_MEMORY_OUTPUT_STREAM(stream);
 
-    fail_unless(ipset_node_cache_save(stream, cache, node, NULL),
-                "Cannot serialize BDD");
+    ipset_node_cache_save(stream, cache, node, NULL);
 
     const char  *raw_expected =
         "IP set"                             // magic number
