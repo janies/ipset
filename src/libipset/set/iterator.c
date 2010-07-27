@@ -22,6 +22,9 @@
 static void
 process_assignment(ipset_iterator_t *iterator);
 
+static void
+expand_ipv6(ipset_iterator_t *iterator);
+
 
 /**
  * Find the highest non-EITHER bit in an assignment, starting from the
@@ -90,6 +93,75 @@ create_ip_address(ipset_iterator_t *iterator)
 
 
 /**
+ * Advance the BDD iterator, taking into account that some assignments
+ * need to be expanded twice.
+ */
+
+static void
+advance_assignment(ipset_iterator_t *iterator)
+{
+    /*
+     * Check the current state of the iterator to determine how to
+     * advance.
+     */
+
+    /*
+     * In most cases, the assignment we just finished only needed to
+     * be expanded once.  So we move on to the next assignment and
+     * process it.
+     */
+
+    if (G_LIKELY(iterator->multiple_expansion_state ==
+                 IPSET_ITERATOR_NORMAL))
+    {
+        ipset_bdd_iterator_advance(iterator->bdd_iterator);
+        process_assignment(iterator);
+        return;
+    }
+
+    /*
+     * If the assignment needs to be expanded twice, we'll do the IPv4
+     * expansion first.  If that's what we've just finished, do the
+     * IPv6 expansion next.
+     */
+
+    if (iterator->multiple_expansion_state ==
+        IPSET_ITERATOR_MULTIPLE_IPV4)
+    {
+        g_d_debug("Expanding IPv6 second");
+
+        iterator->multiple_expansion_state =
+            IPSET_ITERATOR_MULTIPLE_IPV6;
+        ipset_assignment_set
+            (iterator->bdd_iterator->assignment,
+             0, IPSET_FALSE);
+        expand_ipv6(iterator);
+        return;
+    }
+
+    /*
+     * If we've just finished the IPv6 expansion, then we've finished
+     * with this assignment.  Before moving on to the next one, we
+     * have to reset variable 0 to EITHER (which it was before we
+     * started this whole mess).
+     */
+
+    if (iterator->multiple_expansion_state ==
+        IPSET_ITERATOR_MULTIPLE_IPV6)
+    {
+        g_d_debug("Finished both expansions");
+
+        ipset_assignment_set
+            (iterator->bdd_iterator->assignment,
+             0, IPSET_EITHER);
+        ipset_bdd_iterator_advance(iterator->bdd_iterator);
+        process_assignment(iterator);
+        return;
+    }
+}
+
+
+/**
  * Process the current expanded assignment in the current BDD
  * assignment.
  */
@@ -109,9 +181,7 @@ process_expanded_assignment(ipset_iterator_t *iterator)
         ipset_expanded_assignment_free(iterator->assignment_iterator);
         iterator->assignment_iterator = NULL;
 
-        ipset_bdd_iterator_advance(iterator->bdd_iterator);
-        process_assignment(iterator);
-
+        advance_assignment(iterator);
     } else {
         /*
          * Otherwise, we've found a fully expanded assignment, so
@@ -120,6 +190,66 @@ process_expanded_assignment(ipset_iterator_t *iterator)
 
         create_ip_address(iterator);
     }
+}
+
+
+/**
+ * Expand the current assignment as IPv4 addresses.
+ */
+
+static void
+expand_ipv4(ipset_iterator_t *iterator)
+{
+    guint  last_bit;
+
+    if (iterator->summarize)
+    {
+        last_bit = find_last_non_either_bit
+            (iterator->bdd_iterator->assignment,
+             IPV4_BIT_SIZE);
+
+        g_d_debug("Last non-either bit is %u", last_bit);
+    } else {
+        last_bit = IPV4_BIT_SIZE;
+    }
+
+    iterator->assignment_iterator =
+        ipset_assignment_expand
+        (iterator->bdd_iterator->assignment,
+         last_bit + 1);
+    iterator->netmask = last_bit;
+
+    process_expanded_assignment(iterator);
+}
+
+
+/**
+ * Expand the current assignment as IPv4 addresses.
+ */
+
+static void
+expand_ipv6(ipset_iterator_t *iterator)
+{
+    guint  last_bit;
+
+    if (iterator->summarize)
+    {
+        last_bit = find_last_non_either_bit
+            (iterator->bdd_iterator->assignment,
+             IPV6_BIT_SIZE);
+
+        g_d_debug("Last non-either bit is %u", last_bit);
+    } else {
+        last_bit = IPV6_BIT_SIZE;
+    }
+
+    iterator->assignment_iterator =
+        ipset_assignment_expand
+        (iterator->bdd_iterator->assignment,
+         last_bit + 1);
+    iterator->netmask = last_bit;
+
+    process_expanded_assignment(iterator);
 }
 
 
@@ -158,63 +288,37 @@ process_assignment(ipset_iterator_t *iterator)
                  */
 
                 g_d_debug("Assignment is IPv6");
-
-                guint  last_bit;
-
-                if (iterator->summarize)
-                {
-                    last_bit = find_last_non_either_bit
-                        (iterator->bdd_iterator->assignment,
-                         IPV6_BIT_SIZE);
-
-                    g_d_debug("Last non-either bit is %u", last_bit);
-                } else {
-                    last_bit = IPV6_BIT_SIZE;
-                }
-
-                iterator->assignment_iterator =
-                    ipset_assignment_expand
-                    (iterator->bdd_iterator->assignment,
-                     last_bit + 1);
-                iterator->netmask = last_bit;
-
+                iterator->multiple_expansion_state =
+                    IPSET_ITERATOR_NORMAL;
+                expand_ipv6(iterator);
+                return;
             } else if (address_type == IPSET_TRUE) {
                 /*
                  * TRUE means IPv4
                  */
 
                 g_d_debug("Assignment is IPv4");
-
-                guint  last_bit;
-
-                if (iterator->summarize)
-                {
-                    last_bit = find_last_non_either_bit
-                        (iterator->bdd_iterator->assignment,
-                         IPV4_BIT_SIZE);
-
-                    g_d_debug("Last non-either bit is %u", last_bit);
-                } else {
-                    last_bit = IPV4_BIT_SIZE;
-                }
-
-                iterator->assignment_iterator =
-                    ipset_assignment_expand
-                    (iterator->bdd_iterator->assignment,
-                     last_bit + 1);
-                iterator->netmask = last_bit;
-
+                iterator->multiple_expansion_state =
+                    IPSET_ITERATOR_NORMAL;
+                expand_ipv4(iterator);
+                return;
             } else {
                 /*
-                 * Oof.
+                 * EITHER means that this assignment contains both
+                 * IPv4 and IPv6 addresses.  Expand it as IPv4 first.
                  */
 
-                g_d_debug("Assignment is both IPv4 and IPv6...uh-oh");
+                g_d_debug("Assignment is both IPv4 and IPv6");
+                g_d_debug("Expanding IPv4 first");
 
-                g_assert(FALSE);
+                iterator->multiple_expansion_state =
+                    IPSET_ITERATOR_MULTIPLE_IPV4;
+                ipset_assignment_set
+                    (iterator->bdd_iterator->assignment,
+                     0, IPSET_TRUE);
+                expand_ipv4(iterator);
+                return;
             }
-
-            return process_expanded_assignment(iterator);
         }
 
         /*

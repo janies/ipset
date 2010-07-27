@@ -212,6 +212,19 @@ ipset_ip_add_network(ip_set_t *set, ipset_ip_t *addr, guint netmask);
 
 
 /**
+ * An internal state type used by the
+ * ipset_iterator_t.multiple_expansion_state field.
+ */
+
+typedef enum ipset_iterator_state
+{
+    IPSET_ITERATOR_NORMAL = 0,
+    IPSET_ITERATOR_MULTIPLE_IPV4,
+    IPSET_ITERATOR_MULTIPLE_IPV6
+} ipset_iterator_state_t;
+
+
+/**
  * An iterator that returns all of the IP addresses that are (or are
  * not) in an IP set.
  */
@@ -236,6 +249,23 @@ typedef struct ipset_iterator
      */
 
     gboolean  summarize;
+
+    /**
+     * Whether the current assignment needs to be expanded a second
+     * time.
+     *
+     * We have to expand IPv4 and IPv6 assignments separately, since
+     * the set of variables to turn into address bits is different.
+     * Unfortunately, a BDD assignment can contain both IPv4 and IPv6
+     * addresses, if variable 0 is EITHER.  (This is trivially true
+     * for the empty set, for instance.)  In this case, we have to
+     * explicitly set variable 0 to TRUE, expand it as IPv4, and then
+     * set it to FALSE, and expand it as IPv6.  This variable tells us
+     * whether we're in an assignment that needs to be expanded twice,
+     * and if so, which expansion we're currently in.
+     */
+
+    ipset_iterator_state_t  multiple_expansion_state;
 
     /**
      * An iterator for retrieving each assignment in the set's BDD.
