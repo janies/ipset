@@ -74,6 +74,15 @@ def build(bld):
 
     bld(
         features="cc cprogram",
+        source = bld.path.ant_glob("ipsetcat/**/*.c"),
+        includes = ["../include"],
+        target = "ipsetcat/ipsetcat",
+        uselib = "GLIB GIO GIO_UNIX",
+        uselib_local = "ipset",
+    )
+
+    bld(
+        features="cc cprogram",
         source = bld.path.ant_glob("ipsetdot/**/*.c"),
         includes = ["../include"],
         target = "ipsetdot/ipsetdot",
