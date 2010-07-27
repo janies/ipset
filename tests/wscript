@@ -50,3 +50,4 @@ def build(bld):
     make_test("test-ip")
     make_test("test-ipmap")
     make_test("test-ipset")
+    make_test("test-iterator")

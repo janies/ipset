@@ -88,6 +88,9 @@ ipset_node_iterate(ipset_node_id_t root)
 void
 ipset_bdd_iterator_free(ipset_bdd_iterator_t *iterator)
 {
+    if (iterator == NULL)
+        return;
+
     g_array_free(iterator->stack, TRUE);
     ipset_assignment_free(iterator->assignment);
     g_slice_free(ipset_bdd_iterator_t, iterator);
@@ -110,6 +113,8 @@ ipset_bdd_iterator_advance(ipset_bdd_iterator_t *iterator)
      * it's got a true branch, then we pop it off and check the next
      * to last node.
      */
+
+    g_d_debug("Advancing BDD iterator");
 
     while (iterator->stack->len > 0)
     {

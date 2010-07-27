@@ -201,6 +201,73 @@ gboolean
 ipset_ip_add_network(ip_set_t *set, ipset_ip_t *addr, guint netmask);
 
 
+/**
+ * An iterator that returns all of the IP addresses that are (or are
+ * not) in an IP set.
+ */
+
+typedef struct ipset_iterator
+{
+    /**
+     * Whether there are any more IP addresses in this iterator.
+     */
+
+    gboolean finished;
+
+    /**
+     * The desired value for each IP address.
+     */
+
+    gboolean  desired_value;
+
+    /**
+     * An iterator for retrieving each assignment in the set's BDD.
+     */
+
+    ipset_bdd_iterator_t  *bdd_iterator;
+
+    /**
+     * An iterator for expanding each assignment into individual IP
+     * addresses.
+     */
+
+    ipset_expanded_assignment_t  *assignment_iterator;
+
+    /**
+     * The current IP address in the iterator.
+     */
+
+    ipset_ip_t  addr;
+
+} ipset_iterator_t;
+
+
+/**
+ * Return an iterator that yields all of the IP addresses that are (if
+ * desired_value is TRUE) or are not (if desired_value is FALSE) in an
+ * IP set.
+ */
+
+ipset_iterator_t *
+ipset_iterate(ip_set_t *set, gboolean desired_value);
+
+
+/**
+ * Free an IP set iterator.
+ */
+
+void
+ipset_iterator_free(ipset_iterator_t *iterator);
+
+
+/**
+ * Advance an IP set iterator to the next IP address.
+ */
+
+void
+ipset_iterator_advance(ipset_iterator_t *iterator);
+
+
 /*---------------------------------------------------------------------
  * IP map functions
  */

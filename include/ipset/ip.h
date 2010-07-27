@@ -14,6 +14,14 @@
 #include <glib.h>
 
 
+/*
+ * The number of bits in an IP address.
+ */
+
+#define IPV4_BIT_SIZE  32
+#define IPV6_BIT_SIZE  128
+
+
 /**
  * A discriminated IP address.  The address can either be IPv4 or
  * IPv6.

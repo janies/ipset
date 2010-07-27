@@ -105,6 +105,9 @@ ipset_assignment_expand(const ipset_assignment_t *assignment,
 void
 ipset_expanded_assignment_free(ipset_expanded_assignment_t *exp)
 {
+    if (exp == NULL)
+        return;
+
     g_byte_array_free(exp->values, TRUE);
     g_array_free(exp->eithers, TRUE);
     g_slice_free(ipset_expanded_assignment_t, exp);
