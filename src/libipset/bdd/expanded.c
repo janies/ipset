@@ -19,7 +19,7 @@
 static void
 initialize(ipset_expanded_assignment_t *exp,
            const ipset_assignment_t *assignment,
-           ipset_variable_t last_var)
+           ipset_variable_t var_count)
 {
     /*
      * First loop through all of the variables in the assignment
@@ -28,8 +28,8 @@ initialize(ipset_expanded_assignment_t *exp,
      */
 
     ipset_variable_t  last_assignment = assignment->values->len;
-    if (last_var < last_assignment)
-        last_assignment = last_var;
+    if (var_count < last_assignment)
+        last_assignment = var_count;
 
     ipset_variable_t  var;
     for (var = 0; var < last_assignment; var++)
@@ -66,7 +66,7 @@ initialize(ipset_expanded_assignment_t *exp,
      * assignment vector, add them to the eithers list.
      */
 
-    for (var = last_assignment; var < last_var; var++)
+    for (var = last_assignment; var < var_count; var++)
     {
         g_d_debug("Variable %u is implicitly EITHER", var);
         g_array_append_val(exp->eithers, var);
@@ -76,7 +76,7 @@ initialize(ipset_expanded_assignment_t *exp,
 
 ipset_expanded_assignment_t *
 ipset_assignment_expand(const ipset_assignment_t *assignment,
-                        ipset_variable_t last_var)
+                        ipset_variable_t var_count)
 {
     /*
      * First allocate the iterator itself, and all of its contained
@@ -86,7 +86,7 @@ ipset_assignment_expand(const ipset_assignment_t *assignment,
     ipset_expanded_assignment_t  *exp;
 
     guint  values_size =
-        (last_var / 8) + ((last_var % 8) != 0);
+        (var_count / 8) + ((var_count % 8) != 0);
 
     exp = g_slice_new(ipset_expanded_assignment_t);
     exp->finished = FALSE;
@@ -99,7 +99,7 @@ ipset_assignment_expand(const ipset_assignment_t *assignment,
      * Then initialize the values and eithers fields.
      */
 
-    initialize(exp, assignment, last_var);
+    initialize(exp, assignment, var_count);
 
     return exp;
 }

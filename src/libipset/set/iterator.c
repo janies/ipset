@@ -8,6 +8,8 @@
  * ----------------------------------------------------------------------
  */
 
+#include <string.h>
+
 #include <glib.h>
 
 #include <ipset/bdd/nodes.h>
@@ -22,69 +24,68 @@ process_assignment(ipset_iterator_t *iterator);
 
 
 /**
+ * Find the highest non-EITHER bit in an assignment, starting from the
+ * given bit index.
+ */
+
+static guint
+find_last_non_either_bit(ipset_assignment_t *assignment,
+                         guint starting_bit)
+{
+    guint  i;
+
+    for (i = starting_bit; i >= 1; i--)
+    {
+        ipset_tribool_t  value = ipset_assignment_get(assignment, i);
+        if (value != IPSET_EITHER)
+        {
+            return i;
+        }
+    }
+
+    return 0;
+}
+
+
+/**
  * Create a generic IP address object from the current expanded
  * assignment.
  */
 
 static void
-create_ip_address(ipset_ip_t *addr, ipset_expanded_assignment_t *exp)
+create_ip_address(ipset_iterator_t *iterator)
 {
+    ipset_ip_t  *addr = &iterator->addr;
+    ipset_expanded_assignment_t  *exp =
+        iterator->assignment_iterator;
+
     /*
      * Check variable 0 to see if this is an IPv4 or IPv6 address.
      */
 
-    if (IPSET_BIT_GET(exp->values->data, 0))
+    addr->is_ipv4 = IPSET_BIT_GET(exp->values->data, 0);
+
+    /*
+     * Initialize the address to all 0 bits.
+     */
+
+    memset(addr->addr, 0, sizeof(guint32) * 4);
+
+    /*
+     * Copy bits from the expanded assignment.  The number of bits to
+     * copy is given as the current netmask.  We'll have calculated
+     * that already based on the non-expanded assignment.
+     */
+
+    guint  i;
+    for (i = 0; i < iterator->netmask; i++)
     {
-        /*
-         * TRUE means IPv4
-         */
-
-        addr->is_ipv4 = TRUE;
-
-        /*
-         * Copying the bits into the IP address is a pain since
-         * everything is off by one bit.  Joy.
-         */
-
-        guint8  *src = exp->values->data;
-        guint8  *dest = (guint8 *) addr->addr;
-
-        gint  i;
-
-        for (i = 0; i < 4; i++)
-        {
-            dest[i]  = (src[i] << 1) | ((src[i+1] & 0x80) >> 7);
-        }
-
-        for (i = 4; i < 16; i++)
-        {
-            dest[i] = 0;
-        }
-    } else {
-        /*
-         * FALSE means IPv6
-         */
-
-        addr->is_ipv4 = FALSE;
-
-        /*
-         * Copying the bits into the IP address is a pain since
-         * everything is off by one bit.  Joy.
-         */
-
-        guint8  *src = exp->values->data;
-        guint8  *dest = (guint8 *) addr->addr;
-
-        gint  i;
-
-        for (i = 0; i < 16; i++)
-        {
-            dest[i]  = (src[i] << 1) | ((src[i+1] & 0x80) >> 7);
-        }
+        IPSET_BIT_SET(addr->addr, i,
+                      IPSET_BIT_GET(exp->values->data, i+1));
     }
 
-    g_d_debug("Current IP address is %s",
-              ipset_ip_to_string(addr));
+    g_d_debug("Current IP address is %s/%u",
+              ipset_ip_to_string(addr), iterator->netmask);
 }
 
 
@@ -117,8 +118,7 @@ process_expanded_assignment(ipset_iterator_t *iterator)
          * create an IP address for it and return.
          */
 
-        create_ip_address(&iterator->addr,
-                          iterator->assignment_iterator);
+        create_ip_address(iterator);
     }
 }
 
@@ -159,10 +159,24 @@ process_assignment(ipset_iterator_t *iterator)
 
                 g_d_debug("Assignment is IPv6");
 
+                guint  last_bit;
+
+                if (iterator->summarize)
+                {
+                    last_bit = find_last_non_either_bit
+                        (iterator->bdd_iterator->assignment,
+                         IPV6_BIT_SIZE);
+
+                    g_d_debug("Last non-either bit is %u", last_bit);
+                } else {
+                    last_bit = IPV6_BIT_SIZE;
+                }
+
                 iterator->assignment_iterator =
                     ipset_assignment_expand
                     (iterator->bdd_iterator->assignment,
-                     IPV6_BIT_SIZE + 1);
+                     last_bit + 1);
+                iterator->netmask = last_bit;
 
             } else if (address_type == IPSET_TRUE) {
                 /*
@@ -171,10 +185,24 @@ process_assignment(ipset_iterator_t *iterator)
 
                 g_d_debug("Assignment is IPv4");
 
+                guint  last_bit;
+
+                if (iterator->summarize)
+                {
+                    last_bit = find_last_non_either_bit
+                        (iterator->bdd_iterator->assignment,
+                         IPV4_BIT_SIZE);
+
+                    g_d_debug("Last non-either bit is %u", last_bit);
+                } else {
+                    last_bit = IPV4_BIT_SIZE;
+                }
+
                 iterator->assignment_iterator =
                     ipset_assignment_expand
                     (iterator->bdd_iterator->assignment,
-                     IPV4_BIT_SIZE + 1);
+                     last_bit + 1);
+                iterator->netmask = last_bit;
 
             } else {
                 /*
@@ -216,8 +244,9 @@ process_assignment(ipset_iterator_t *iterator)
 }
 
 
-ipset_iterator_t *
-ipset_iterate(ip_set_t *set, gboolean desired_value)
+static ipset_iterator_t *
+create_iterator(ip_set_t *set, gboolean desired_value,
+                gboolean summarize)
 {
     /*
      * First allocate the iterator itself.
@@ -229,6 +258,7 @@ ipset_iterate(ip_set_t *set, gboolean desired_value)
     iterator->finished = FALSE;
     iterator->assignment_iterator = NULL;
     iterator->desired_value = desired_value;
+    iterator->summarize = summarize;
 
     /*
      * Then create the iterator that returns each BDD assignment.
@@ -244,6 +274,20 @@ ipset_iterate(ip_set_t *set, gboolean desired_value)
 
     process_assignment(iterator);
     return iterator;
+}
+
+
+ipset_iterator_t *
+ipset_iterate(ip_set_t *set, gboolean desired_value)
+{
+    return create_iterator(set, desired_value, FALSE);
+}
+
+
+ipset_iterator_t *
+ipset_iterate_networks(ip_set_t *set, gboolean desired_value)
+{
+    return create_iterator(set, desired_value, TRUE);
 }
 
 

@@ -648,13 +648,13 @@ typedef struct ipset_expanded_assignment
 /**
  * Return an iterator that expands a variable assignment.  For each
  * variable that's EITHER in the assignment, the iterator yields a
- * result with both values.  The iterator will ensure that all
- * variables up through the specified one are given concrete values.
+ * result with both values.  The iterator will ensure that the
+ * specified number of variables are given concrete values.
  */
 
 ipset_expanded_assignment_t *
 ipset_assignment_expand(const ipset_assignment_t *assignment,
-                        ipset_variable_t last_var);
+                        ipset_variable_t var_count);
 
 
 /**

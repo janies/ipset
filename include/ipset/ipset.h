@@ -231,6 +231,13 @@ typedef struct ipset_iterator
     gboolean  desired_value;
 
     /**
+     * Whether to summarize the contents of the IP set as networks,
+     * where possible.
+     */
+
+    gboolean  summarize;
+
+    /**
      * An iterator for retrieving each assignment in the set's BDD.
      */
 
@@ -244,10 +251,17 @@ typedef struct ipset_iterator
     ipset_expanded_assignment_t  *assignment_iterator;
 
     /**
-     * The current IP address in the iterator.
+     * The address of the current IP network in the iterator.
      */
 
     ipset_ip_t  addr;
+
+    /**
+     * The netmask of the current IP network in the iterator.  For a
+     * single IP address, this will be 32 or 128.
+     */
+
+    guint  netmask;
 
 } ipset_iterator_t;
 
@@ -260,6 +274,16 @@ typedef struct ipset_iterator
 
 ipset_iterator_t *
 ipset_iterate(ip_set_t *set, gboolean desired_value);
+
+
+/**
+ * Return an iterator that yields all of the IP networks that are (if
+ * desired_value is TRUE) or are not (if desired_value is FALSE) in an
+ * IP set.
+ */
+
+ipset_iterator_t *
+ipset_iterate_networks(ip_set_t *set, gboolean desired_value);
 
 
 /**
