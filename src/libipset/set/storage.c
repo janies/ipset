@@ -29,6 +29,16 @@ ipset_save(GOutputStream *stream,
 }
 
 
+gboolean
+ipset_save_dot(GOutputStream *stream,
+               ip_set_t *set,
+               GError **err)
+{
+    return ipset_node_cache_save_dot
+        (stream, ipset_cache, set->set_bdd, err);
+}
+
+
 ip_set_t *
 ipset_load(GInputStream *stream,
            GError **err)

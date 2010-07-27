@@ -345,6 +345,19 @@ ipset_node_cache_save(GOutputStream *stream,
                       GError **err);
 
 
+/**
+ * Save a GraphViz dot graph for a BDD.  The graph script is written
+ * to the given output stream.  This graph only includes those nodes
+ * that are reachable from the BDD's root node.
+ */
+
+gboolean
+ipset_node_cache_save_dot(GOutputStream *stream,
+                          ipset_node_cache_t *cache,
+                          ipset_node_id_t node,
+                          GError **err);
+
+
 /*-----------------------------------------------------------------------
  * BDD operators
  */

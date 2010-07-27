@@ -159,6 +159,12 @@ struct save_data
      */
 
     write_nonterminal_t  write_nonterminal;
+
+    /**
+     * A pointer to any additional data needed by the callbacks.
+     */
+
+    gpointer  user_data;
 };
 
 
@@ -180,12 +186,18 @@ save_visit_node(save_data_t *save_data,
      * Check whether we've already serialized this node.
      */
 
-    gpointer  serialized_ptr =
-        g_hash_table_lookup(save_data->serialized_ids, node_id);
-    result = GPOINTER_TO_INT(serialized_ptr);
+    gpointer  serialized_ptr;
+    gboolean  node_exists =
+        g_hash_table_lookup_extended
+        (save_data->serialized_ids,
+         node_id,
+         NULL,
+         &serialized_ptr);
 
-    if (serialized_ptr == NULL)
+    if (node_exists)
     {
+        result = GPOINTER_TO_INT(serialized_ptr);
+    } else {
         if (ipset_node_get_type(node_id) == IPSET_TERMINAL_NODE)
         {
             /*
@@ -522,7 +534,329 @@ ipset_node_cache_save(GOutputStream *stream,
         write_header_v1,        /* header writer */
         write_footer_v1,        /* footer writer */
         write_terminal_v1,      /* terminal writer */
-        write_nonterminal_v1    /* nonterminal writer */
+        write_nonterminal_v1,   /* nonterminal writer */
+        NULL                    /* user data */
+    };
+
+    /*
+     * Create a GDataOutputStream to output the binary data.
+     */
+
+    save_data.dstream = g_data_output_stream_new(stream);
+
+    /*
+     * Then use the generic saving functions to output the file.
+     */
+
+    TRY_OR_RETURN(FALSE,
+                  save_bdd,
+                  &save_data, cache, node);
+
+    g_object_unref(save_data.dstream);
+    return TRUE;
+
+  error:
+    /*
+     * If there's an error, clean up the objects that we've created
+     * before returning.
+     */
+
+    g_object_unref(save_data.dstream);
+
+    return result;
+}
+
+
+/*-----------------------------------------------------------------------
+ * GraphViz dot file
+ */
+
+static const gchar  *GRAPHVIZ_HEADER =
+    "strict digraph bdd {\n";
+
+static const gchar  *GRAPHVIZ_FOOTER =
+    "}\n";
+
+
+typedef struct dot_data
+{
+    /**
+     * The terminal value to leave out of the dot file.  This should
+     * be the default value of the set or map.
+     */
+
+    ipset_range_t  default_value;
+
+} dot_data_t;
+
+
+static gboolean
+write_header_dot(save_data_t *save_data,
+                 ipset_node_cache_t *cache,
+                 ipset_node_id_t root,
+                 GError **err)
+{
+    gboolean  result = FALSE;
+
+    /*
+     * Output the opening clause of the GraphViz script.
+     */
+
+    TRY_OR_RETURN(FALSE,
+                  g_data_output_stream_put_string,
+                  save_data->dstream,
+                  GRAPHVIZ_HEADER, NULL);
+
+  error:
+    /*
+     * There's no cleanup to do on an error.
+     */
+
+    return result;
+}
+
+
+static gboolean
+write_footer_dot(save_data_t *save_data,
+                 ipset_node_cache_t *cache,
+                 ipset_node_id_t root,
+                 GError **err)
+{
+    gboolean  result = FALSE;
+
+    /*
+     * Output the closing clause of the GraphViz script.
+     */
+
+    TRY_OR_RETURN(FALSE,
+                  g_data_output_stream_put_string,
+                  save_data->dstream,
+                  GRAPHVIZ_FOOTER, NULL);
+
+  error:
+    /*
+     * There's no cleanup to do on an error.
+     */
+
+    return result;
+}
+
+
+static gboolean
+write_terminal_dot(save_data_t *save_data,
+                   ipset_range_t terminal_value,
+                   GError **err)
+{
+    gboolean  result = FALSE;
+    dot_data_t  *dot_data = (dot_data_t *) save_data->user_data;
+
+    /*
+     * If this terminal has the default value, skip it.
+     */
+
+    if (terminal_value == dot_data->default_value)
+    {
+        return TRUE;
+    }
+
+    /*
+     * Output a node for the terminal value.
+     */
+
+    GString  *str = g_string_new(NULL);
+    g_string_printf(str,
+                    "    t%d [shape=box, label=%d];\n",
+                    terminal_value,
+                    terminal_value);
+
+    TRY_OR_RETURN(FALSE,
+                  g_data_output_stream_put_string,
+                  save_data->dstream,
+                  str->str, NULL);
+
+    g_string_free(str, TRUE);
+
+    return TRUE;
+
+  error:
+    /*
+     * There's no cleanup to do on an error.
+     */
+
+    return result;
+}
+
+
+static gboolean
+write_nonterminal_dot(save_data_t *save_data,
+                      serialized_id_t serialized_id,
+                      ipset_variable_t variable,
+                      serialized_id_t serialized_low,
+                      serialized_id_t serialized_high,
+                      GError **err)
+{
+    gboolean  result = FALSE;
+    dot_data_t  *dot_data = (dot_data_t *) save_data->user_data;
+
+    /*
+     * Include a node for the nonterminal value.
+     */
+
+    GString  *str = g_string_new(NULL);
+    g_string_printf(str,
+                    "    n%d [shape=circle,label=%u];\n",
+                    (-serialized_id), variable);
+
+    /*
+     * Include an edge for the low pointer.
+     */
+
+    if (serialized_low < 0)
+    {
+        /*
+         * The low pointer is a nonterminal.
+         */
+
+        g_string_append_printf(str,
+                               "    n%d -> n%d",
+                               (-serialized_id),
+                               (-serialized_low));
+    } else {
+        /*
+         * The low pointer is a terminal.
+         */
+
+        ipset_range_t  low_value = (ipset_range_t) serialized_low;
+
+        if (low_value == dot_data->default_value)
+        {
+            /*
+             * The terminal is the default value, so instead of a real
+             * terminal, connect this pointer to a dummy circle node.
+             */
+
+            g_string_append_printf(str,
+                                   "    low%d [shape=circle,label=\"\"]\n"
+                                   "    n%d -> low%d",
+                                   (-serialized_id),
+                                   (-serialized_id),
+                                   (-serialized_id));
+        } else {
+            /*
+             * The terminal isn't a default, so go ahead and output
+             * it.
+             */
+
+            g_string_append_printf(str,
+                                   "    n%d -> t%d",
+                                   (-serialized_id),
+                                   serialized_low);
+        }
+    }
+
+    g_string_append_printf(str,
+                           " [style=dashed,color=red]\n");
+
+    /*
+     * Include an edge for the high pointer.
+     */
+
+    if (serialized_high < 0)
+    {
+        /*
+         * The high pointer is a nonterminal.
+         */
+
+        g_string_append_printf(str,
+                               "    n%d -> n%d",
+                               (-serialized_id),
+                               (-serialized_high));
+    } else {
+        /*
+         * The high pointer is a terminal.
+         */
+
+        ipset_range_t  high_value = (ipset_range_t) serialized_high;
+
+        if (high_value == dot_data->default_value)
+        {
+            /*
+             * The terminal is the default value, so instead of a real
+             * terminal, connect this pointer to a dummy circle node.
+             */
+
+            g_string_append_printf(str,
+                                   "    high%d "
+                                   "[shape=circle,"
+                                   "fixedsize=true,"
+                                   "height=0.25,"
+                                   "width=0.25,"
+                                   "label=\"\"]\n"
+                                   "    n%d -> high%d",
+                                   (-serialized_id),
+                                   (-serialized_id),
+                                   (-serialized_id));
+        } else {
+            /*
+             * The terminal isn't a default, so go ahead and output
+             * it.
+             */
+
+            g_string_append_printf(str,
+                                   "    n%d -> t%d",
+                                   (-serialized_id),
+                                   serialized_high);
+        }
+    }
+
+    g_string_append_printf(str,
+                           " [style=solid,color=black]\n");
+
+    /*
+     * Output the clauses to the stream.
+     */
+
+    TRY_OR_RETURN(FALSE,
+                  g_data_output_stream_put_string,
+                  save_data->dstream,
+                  str->str, NULL);
+
+    g_string_free(str, TRUE);
+
+    return TRUE;
+
+  error:
+    /*
+     * There's no cleanup to do on an error.
+     */
+
+    return result;
+}
+
+
+gboolean
+ipset_node_cache_save_dot(GOutputStream *stream,
+                          ipset_node_cache_t *cache,
+                          ipset_node_id_t node,
+                          GError **err)
+{
+    g_return_val_if_fail(err == NULL || *err == NULL, FALSE);
+
+    gboolean  result = FALSE;
+
+    dot_data_t  dot_data = {
+        0                       /* default value */
+    };
+
+    save_data_t  save_data = {
+        NULL,                   /* output stream */
+        NULL,                   /* serialized ID cache */
+        0,                      /* next serialized ID */
+        write_header_dot,       /* header writer */
+        write_footer_dot,       /* footer writer */
+        write_terminal_dot,     /* terminal writer */
+        write_nonterminal_dot,  /* nonterminal writer */
+        &dot_data
     };
 
     /*

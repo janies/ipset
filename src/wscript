@@ -71,3 +71,12 @@ def build(bld):
         uselib = "GLIB GIO GIO_UNIX",
         uselib_local = "ipset",
     )
+
+    bld(
+        features="cc cprogram",
+        source = bld.path.ant_glob("ipsetdot/**/*.c"),
+        includes = ["../include"],
+        target = "ipsetdot/ipsetdot",
+        uselib = "GLIB GIO GIO_UNIX",
+        uselib_local = "ipset",
+    )

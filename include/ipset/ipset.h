@@ -124,6 +124,16 @@ ipset_save(GOutputStream *stream,
            GError **err);
 
 /**
+ * Saves a GraphViz dot graph for an IP set to disk.  Returns a
+ * boolean indicating whether the operation was successful.
+ */
+
+gboolean
+ipset_save_dot(GOutputStream *stream,
+               ip_set_t *set,
+               GError **err);
+
+/**
  * Loads an IP set from a stream.  Returns NULL if the set cannot be
  * loaded.
  */
