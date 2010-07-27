@@ -8,6 +8,8 @@
  * ----------------------------------------------------------------------
  */
 
+#include <string.h>
+
 #include <glib.h>
 
 #include <ipset/bdd/nodes.h>
@@ -89,6 +91,7 @@ ipset_assignment_expand(const ipset_assignment_t *assignment,
     exp = g_slice_new(ipset_expanded_assignment_t);
     exp->finished = FALSE;
     exp->values = g_byte_array_sized_new(values_size);
+    memset(exp->values->data, 0, values_size);
     exp->eithers =
         g_array_new(FALSE, FALSE, sizeof(ipset_variable_t));
 

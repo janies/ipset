@@ -9,6 +9,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <check.h>
 #include <glib.h>
@@ -125,6 +126,7 @@ START_TEST(test_bdd_assignment_expand_1)
     it = ipset_assignment_expand(a, 2);
 
     GByteArray  *ea = g_byte_array_sized_new(1);
+    memset(ea->data, 0, 1);
 
     fail_if(it->finished,
             "Expanded assignment shouldn't be empty");
@@ -156,6 +158,7 @@ START_TEST(test_bdd_assignment_expand_2)
     it = ipset_assignment_expand(a, 3);
 
     GByteArray  *ea = g_byte_array_sized_new(1);
+    memset(ea->data, 0, 1);
 
     fail_if(it->finished,
             "Expanded assignment shouldn't be empty");
@@ -197,6 +200,7 @@ START_TEST(test_bdd_assignment_expand_3)
     it = ipset_assignment_expand(a, 3);
 
     GByteArray  *ea = g_byte_array_sized_new(1);
+    memset(ea->data, 0, 1);
 
     fail_if(it->finished,
             "Expanded assignment shouldn't be empty");
